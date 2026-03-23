@@ -10,9 +10,13 @@ import SwiftData
 
 @main
 struct KadroApp: App {
+    @State private var appState = AppState()
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            ContentProject.self,
+            CarouselSlide.self,
+            BrandProfile.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +29,8 @@ struct KadroApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
+                .environment(appState)
         }
         .modelContainer(sharedModelContainer)
     }

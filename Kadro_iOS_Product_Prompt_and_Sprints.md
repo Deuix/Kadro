@@ -1238,3 +1238,144 @@ Design every screen as if Kadro is trying to earn:
 
 Do not make it look like another AI app.  
 Make it feel like **the** modern iPhone content studio.
+
+---
+
+## 21. Implementation Progress Report
+
+### Current state: Sprint 3 — Native iOS shell & design system (In Progress)
+
+**Sprints 0–2** (Product framing, UX foundation, Visual system) are considered **complete** — the product brief, information architecture, screen breakdowns, color system, typography, and visual direction are all documented in this file and in `README.md`.
+
+**Sprint 3** is **actively in progress**. The native iOS shell has been scaffolded with the following work completed:
+
+---
+
+### ✅ What has been done
+
+#### Project structure
+- Xcode project created (`Kadro.xcodeproj`)
+- Bundle ID: `com.deuix.Kadro`
+- SwiftUI + SwiftData stack
+- Deployment target: iOS 26.2 (Xcode 26.2)
+- Modular folder structure established:
+  - `Kadro/Core/DesignSystem/` — color tokens, typography, reusable components
+  - `Kadro/Core/Models/` — data models and app state
+  - `Kadro/Features/` — feature-specific screens organized by tab
+
+#### Design system (code)
+- **KadroColors.swift** — Full Charcoal + Lime palette implemented as SwiftUI `Color` extensions:
+  - `kadroCharcoal` (#171717), `kadroIvory` (#F5F1E8), `kadroLime` (#C7D92C)
+  - `kadroWarmGray` (#8E8A83), `kadroSand` (#DDD6C8), `kadroSoftWhite` (#FFFDF8)
+  - Semantic colors: `kadroSuccess`, `kadroError`, `kadroWarning`
+  - Convenience aliases: `kadroBackground`, `kadroCardBackground`, `kadroAccent`, etc.
+- **KadroTypography.swift** — Full typography scale as `Font` extensions:
+  - Display: `kadroLargeTitle` (34pt), `kadroTitle` (28pt), `kadroTitle2` (22pt), `kadroTitle3` (20pt)
+  - Body: `kadroBody` (17pt), `kadroBodyMedium` (17pt medium), `kadroCallout` (15pt), `kadroFootnote` (13pt), `kadroCaption` (11pt)
+  - Special: `kadroButton` (17pt semibold), `kadroChip` (14pt medium), `kadroTabBar` (10pt)
+- **KadroComponents.swift** — Reusable UI component library:
+  - `KadroPrimaryButton` — lime accent CTA button
+  - `KadroSecondaryButton` — outlined secondary button
+  - `KadroCard` — generic card container
+  - `KadroActionCard` — tappable card with icon, title, subtitle, chevron
+  - `KadroQuickActionCard` — square icon + label card for quick actions
+  - `KadroChip` — selectable chip/tag component
+  - `KadroSectionHeader` — section title with optional "See all" action
+  - `KadroStatusBadge` — colored status pill (Draft, Ready, Scheduled, Published)
+  - `KadroEmptyState` — friendly empty state with icon, text, and optional CTA
+
+#### Data models
+- **ContentProject.swift** — SwiftData `@Model` for content projects with:
+  - Enums: `ContentType`, `ContentStatus`, `ContentPlatform`, `ContentTone`, `ContentGoal`
+  - Fields for post content (hook, mainText, CTA, shortVersion, hashtags)
+  - Fields for Reels/TikTok content (scriptBeats, onScreenText, caption, coverIdea)
+  - Scheduling support (`scheduledDate`)
+  - Relationship to `CarouselSlide` with cascade delete
+- **CarouselSlide.swift** (in ContentProject.swift) — SwiftData `@Model` for carousel slides with:
+  - Enums: `SlideLayout` (5 presets), `SlideVisualStyle` (5 presets)
+  - Fields: order, headline, bodyText, ctaText, layoutStyle, visualStyle
+  - Inverse relationship to `ContentProject`
+- **BrandProfile.swift** — SwiftData `@Model` for brand memory with:
+  - Enums: `UserType` (4 types with icons), `ToneAxis` (4 axes), `VisualMood` (5 moods)
+  - Basics: brandName, niche, language, audience, userType
+  - Tone sliders: toneExpertSimple, toneWarmStrict, toneBoldNeutral, toneShortDetailed (0.0–1.0)
+  - Writing rules: wordsToUse, wordsToAvoid, ctaStyle, favoritePhrases
+  - Visual: visualMood, palettePreference, coverStyle
+  - Best examples support
+
+#### App state & navigation
+- **AppState.swift** — `@Observable` app-wide state management:
+  - `hasCompletedOnboarding` (persisted to UserDefaults)
+  - `selectedTab` with `TabItem` enum (5 tabs: Home, Create, Content, Calendar, Brand)
+  - Tab icons and titles defined
+- **KadroApp.swift** — App entry point configured with:
+  - SwiftData `ModelContainer` for `ContentProject`, `CarouselSlide`, `BrandProfile`
+  - `AppState` injected via `.environment()`
+  - `MainTabView` as root view
+
+#### Feature screens (all 5 tabs implemented)
+- **MainTabView.swift** — 5-tab navigation using iOS `Tab` API, tinted with lime accent
+- **HomeView.swift** — Full home screen with:
+  - Hero card with "Create content" CTA
+  - Quick action grid (Post, Carousel, Reels)
+  - Recent drafts section with SwiftData `@Query`
+  - AI idea suggestion cards (educational, personal, selling angles)
+  - Empty state handling
+- **CreateFlowView.swift** — 3-step guided creation flow:
+  - Step 1: Input source selection (6 options with icons)
+  - Step 2: Text input with suggestion chips + character counter
+  - Step 3: Output type selection + tone/goal chips
+  - Progress bar, back/next navigation, spring animations
+  - Custom `FlowLayout` for wrapping chip layout
+- **ContentLibraryView.swift** — Content library with:
+  - Filter chips (All, Draft, Ready, Scheduled, Published)
+  - Search support
+  - Content cards with type icon, title, platform, status badge
+  - Empty states for no content and no search results
+- **CalendarView.swift** — Calendar with:
+  - Week/Month mode picker (segmented control)
+  - Interactive week strip with day selection and content indicator dots
+  - Scheduled content cards for selected day
+  - Day empty state with "Schedule" CTA
+  - AI planning suggestions
+- **BrandView.swift** — Brand settings with:
+  - Basics section (name, niche, audience, user type selection)
+  - Tone section (4 sliders: expert↔simple, warm↔strict, bold↔neutral, short↔detailed)
+  - Writing rules section (words to use/avoid, CTA style, favorite phrases)
+  - Visual style section (5 mood presets with visual squares)
+  - Save button, load/save to SwiftData
+
+#### Unused template files (still present)
+- `ContentView.swift` — original Xcode template, not used
+- `Item.swift` — original Xcode template, not used
+
+---
+
+### 🔲 What is left to complete Sprint 3
+
+- [ ] **Onboarding flow** — 5-screen onboarding sequence (value → user type → content goals → style → first win) as described in section 8.10
+- [ ] **Conditional onboarding** — Update `KadroApp.swift` to show onboarding on first launch, then main tab view
+- [ ] **Build verification** — Confirm the project compiles cleanly on iOS Simulator
+- [ ] **Remove template files** — Delete unused `ContentView.swift` and `Item.swift`
+- [ ] **Settings screen** — Basic settings placeholder (account, subscription, support)
+
+---
+
+### 🔲 Remaining sprints (not started)
+
+| Sprint | Focus | Status |
+|--------|-------|--------|
+| Sprint 0 | Product framing & system definition | ✅ Complete |
+| Sprint 1 | UX foundation & low-fi flows | ✅ Complete |
+| Sprint 2 | Visual system & high-fidelity design | ✅ Complete |
+| Sprint 3 | Native iOS shell & design system | 🟡 In Progress (~85%) |
+| Sprint 4 | Create flow & AI generation layer | 🔲 Not started |
+| Sprint 5 | Editors and refinement tools | 🔲 Not started |
+| Sprint 6 | Library, Calendar, Brand integration | 🔲 Not started |
+| Sprint 7 | Monetization, polish, App Store readiness | 🔲 Not started |
+| Sprint 8 | Beta, retention, and iteration | 🔲 Not started |
+
+### Key next steps after Sprint 3
+1. **Sprint 4** — Connect AI generation (OpenAI/Claude API), implement actual content generation from the Create flow, build structured result screens, loading states, and error handling
+2. **Sprint 5** — Build the post editor and carousel editor with AI rewrite actions
+3. **Sprint 6** — Wire up content library with real CRUD operations, scheduling, and brand memory integration into generation prompts
