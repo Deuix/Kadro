@@ -28,6 +28,7 @@ final class KadroAIService {
             tone: context.tone?.rawValue ?? "",
             goal: context.goal?.rawValue ?? "",
             platform: context.platform.rawValue,
+            contentLanguage: context.contentLanguage,
             formatDetail: context.formatDetail ?? "",
             preferredImageAspectRatio: context.preferredImageAspectRatio ?? "",
             desiredSlideCount: context.desiredSlideCount ?? 0,

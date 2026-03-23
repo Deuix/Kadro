@@ -27,12 +27,21 @@ final class OnboardingState {
     }
 
     enum TonePreset: String, CaseIterable, Identifiable {
-        case friendly = "Дружелюбный"
-        case expert = "Экспертный"
-        case balanced = "Сбалансированный"
-        case bold = "Смелый"
+        case friendly = "friendly"
+        case expert = "expert"
+        case balanced = "balanced"
+        case bold = "bold"
 
         var id: String { rawValue }
+
+        var displayName: String {
+            switch self {
+            case .friendly: return L10n.Onboarding.toneFriendly
+            case .expert:   return L10n.Onboarding.toneExpert
+            case .balanced: return L10n.Onboarding.toneBalanced
+            case .bold:     return L10n.Onboarding.toneBold
+            }
+        }
 
         var icon: String {
             switch self {
@@ -45,12 +54,21 @@ final class OnboardingState {
     }
 
     enum ContentGoalOption: String, CaseIterable, Identifiable, Hashable {
-        case posts = "Посты"
-        case carousels = "Карусели"
-        case reels = "Reels / TikTok"
-        case contentPlan = "Контент-план"
+        case posts = "posts"
+        case carousels = "carousels"
+        case reels = "reels"
+        case contentPlan = "contentPlan"
 
         var id: String { rawValue }
+
+        var displayName: String {
+            switch self {
+            case .posts:       return L10n.Onboarding.goalPosts
+            case .carousels:   return L10n.Onboarding.goalCarousels
+            case .reels:       return L10n.Onboarding.goalReels
+            case .contentPlan: return L10n.Onboarding.goalContentPlan
+            }
+        }
 
         var icon: String {
             switch self {
@@ -164,7 +182,7 @@ struct OnboardingView: View {
                     onboardingState.currentStep += 1
                 }
             } label: {
-                Text(onboardingState.currentStep == 0 ? "Начать" : "Продолжить")
+                Text(onboardingState.currentStep == 0 ? L10n.Onboarding.start : L10n.Onboarding.continueAction)
                     .font(.kadroButton)
                     .foregroundColor(.kadroCharcoal)
                     .frame(maxWidth: .infinity)
@@ -233,13 +251,13 @@ private struct OnboardingStep1: View {
                         .font(.kadroLargeTitle)
                         .foregroundColor(.kadroCharcoal)
 
-                    Text("Превращай идеи\nв готовый контент")
+                    Text(L10n.Onboarding.step1Headline)
                         .font(.kadroTitle2)
                         .foregroundColor(.kadroCharcoal)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
 
-                    Text("Посты, карусели и сценарии для Reels —\nбыстро, с нужным стилем и структурой.")
+                    Text(L10n.Onboarding.step1Subtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                         .multilineTextAlignment(.center)
@@ -248,9 +266,9 @@ private struct OnboardingStep1: View {
 
                 // Feature list
                 VStack(spacing: 10) {
-                    OnboardingFeatureRow(icon: "bolt.fill", text: "Идея → контент за несколько минут")
-                    OnboardingFeatureRow(icon: "paintbrush.pointed.fill", text: "Помнит ваш стиль и голос бренда")
-                    OnboardingFeatureRow(icon: "rectangle.split.3x1.fill", text: "Карусели, посты и Reels из одной мысли")
+                    OnboardingFeatureRow(icon: "bolt.fill", text: L10n.Onboarding.feature1)
+                    OnboardingFeatureRow(icon: "paintbrush.pointed.fill", text: L10n.Onboarding.feature2)
+                    OnboardingFeatureRow(icon: "rectangle.split.3x1.fill", text: L10n.Onboarding.feature3)
                 }
             }
             .padding(.horizontal, 24)
@@ -271,11 +289,11 @@ private struct OnboardingStep2: View {
                 Spacer().frame(height: 8)
 
                 VStack(spacing: 8) {
-                    Text("Кто вы?")
+                    Text(L10n.Onboarding.step2Title)
                         .font(.kadroLargeTitle)
                         .foregroundColor(.kadroCharcoal)
 
-                    Text("Это поможет Kadro настроить\nконтент под вас")
+                    Text(L10n.Onboarding.step2Subtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                         .multilineTextAlignment(.center)
@@ -285,7 +303,7 @@ private struct OnboardingStep2: View {
                     ForEach(UserType.allCases) { userType in
                         OnboardingSelectionCard(
                             icon: userType.icon,
-                            title: userType.rawValue,
+                            title: userType.displayName,
                             isSelected: state.selectedUserType == userType
                         ) {
                             withAnimation(.spring(response: 0.3)) {
@@ -313,12 +331,12 @@ private struct OnboardingStep3: View {
                 Spacer().frame(height: 8)
 
                 VStack(spacing: 8) {
-                    Text("Что будете создавать?")
+                    Text(L10n.Onboarding.step3Title)
                         .font(.kadroLargeTitle)
                         .foregroundColor(.kadroCharcoal)
                         .multilineTextAlignment(.center)
 
-                    Text("Можно выбрать несколько форматов")
+                    Text(L10n.Onboarding.step3Subtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                 }
@@ -343,7 +361,7 @@ private struct OnboardingStep3: View {
                                     .font(.system(size: 28, weight: .medium))
                                     .foregroundColor(isSelected ? .kadroCharcoal : .kadroWarmGray)
 
-                                Text(goal.rawValue)
+                                Text(goal.displayName)
                                     .font(.kadroChip)
                                     .foregroundColor(isSelected ? .kadroCharcoal : .kadroWarmGray)
                                     .multilineTextAlignment(.center)
@@ -379,17 +397,17 @@ private struct OnboardingStep4: View {
                 Spacer().frame(height: 8)
 
                 VStack(spacing: 8) {
-                    Text("Ваш стиль")
+                    Text(L10n.Onboarding.step4Title)
                         .font(.kadroLargeTitle)
                         .foregroundColor(.kadroCharcoal)
 
-                    Text("Kadro будет писать в вашем голосе")
+                    Text(L10n.Onboarding.step4Subtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Тон голоса")
+                    Text(L10n.Onboarding.toneVoice)
                         .font(.kadroBodyMedium)
                         .foregroundColor(.kadroCharcoal)
                         .padding(.horizontal, 24)
@@ -398,7 +416,7 @@ private struct OnboardingStep4: View {
                         ForEach(OnboardingState.TonePreset.allCases) { tone in
                             OnboardingSelectionCard(
                                 icon: tone.icon,
-                                title: tone.rawValue,
+                                title: tone.displayName,
                                 isSelected: state.selectedTone == tone
                             ) {
                                 withAnimation(.spring(response: 0.3)) {
@@ -411,7 +429,7 @@ private struct OnboardingStep4: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Визуальный стиль")
+                    Text(L10n.Onboarding.visualStyle)
                         .font(.kadroBodyMedium)
                         .foregroundColor(.kadroCharcoal)
                         .padding(.horizontal, 24)
@@ -425,7 +443,7 @@ private struct OnboardingStep4: View {
                                         state.selectedVisualMood = mood
                                     }
                                 } label: {
-                                    Text(mood.rawValue)
+                                    Text(mood.displayName)
                                         .font(.kadroChip)
                                         .foregroundColor(isSelected ? .kadroCharcoal : .kadroWarmGray)
                                         .padding(.horizontal, 18)
@@ -474,11 +492,11 @@ private struct OnboardingStep5: View {
                 .onAppear { isPulsing = true }
 
                 VStack(spacing: 12) {
-                    Text("Всё готово!")
+                    Text(L10n.Onboarding.step5Title)
                         .font(.kadroLargeTitle)
                         .foregroundColor(.kadroCharcoal)
 
-                    Text("Kadro настроен под вас.\nСоздайте первый контент прямо сейчас.")
+                    Text(L10n.Onboarding.step5Subtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                         .multilineTextAlignment(.center)
@@ -489,9 +507,9 @@ private struct OnboardingStep5: View {
             Spacer()
 
             VStack(spacing: 12) {
-                KadroPrimaryButton(title: "Создать первый контент", action: onFinish)
+                KadroPrimaryButton(title: L10n.Onboarding.createFirstContent, action: onFinish)
 
-                Text("Kadro использует ИИ для создания контента.\nВаши данные в безопасности.")
+                Text(L10n.Onboarding.disclaimer)
                     .font(.kadroCaption)
                     .foregroundColor(.kadroWarmGray)
                     .multilineTextAlignment(.center)

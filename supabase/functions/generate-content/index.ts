@@ -27,6 +27,7 @@ type GenerateContentBody = {
   tone?: string
   goal?: string
   platform?: string
+  content_language?: string
   format_detail?: string
   preferred_image_aspect_ratio?: string
   desired_slide_count?: number
@@ -228,6 +229,7 @@ Deno.serve(async (req) => {
     tone: body.tone ?? '',
     goal: body.goal ?? '',
     platform: body.platform ?? 'Instagram',
+    content_language: body.content_language ?? '',
     format_detail: body.format_detail ?? '',
     preferred_image_aspect_ratio: body.preferred_image_aspect_ratio ?? '',
     desired_slide_count: body.desired_slide_count ?? 0,
@@ -473,7 +475,7 @@ function buildSystemPrompt() {
 function buildUserPrompt(payload: Record<string, unknown>) {
   return [
     'Generate a publish-ready social content package using this request.',
-    'Output language must follow brand_profile.language when present; otherwise use Russian.',
+    'Output language must follow content_language when present; otherwise use brand_profile.language when present; otherwise use Russian.',
     'The content should feel premium, human, clear, and tasteful.',
     'Prioritize strong hooks, clean structure, and high readability.',
     'Use brand words when useful and avoid banned words if supplied.',

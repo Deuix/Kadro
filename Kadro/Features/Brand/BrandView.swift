@@ -56,11 +56,11 @@ struct BrandView: View {
                 .padding(.bottom, 32)
             }
             .background(Color.kadroIvory)
-            .navigationTitle("Бренд")
+            .navigationTitle(L10n.Brand.navTitle)
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Сохранить") {
+                    Button(L10n.Brand.save) {
                         saveProfile()
                     }
                     .font(.kadroButton)
@@ -78,18 +78,18 @@ struct BrandView: View {
     
     private var basicsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            KadroSectionHeader(title: "Основное")
-            
+            KadroSectionHeader(title: L10n.Brand.sectionBasics)
+
             KadroCard {
                 VStack(spacing: 14) {
-                    brandTextField(title: "Название бренда", text: $brandName, placeholder: "Ваш бренд или имя")
-                    brandTextField(title: "Ниша", text: $niche, placeholder: "Например: фитнес, маркетинг, психология")
-                    brandTextField(title: "Аудитория", text: $audience, placeholder: "Кто ваша целевая аудитория?")
+                    brandTextField(title: L10n.Brand.brandName, text: $brandName, placeholder: L10n.Brand.brandNamePlaceholder)
+                    brandTextField(title: L10n.Brand.niche, text: $niche, placeholder: L10n.Brand.nichePlaceholder)
+                    brandTextField(title: L10n.Brand.audience, text: $audience, placeholder: L10n.Brand.audiencePlaceholder)
                 }
             }
-            
+
             VStack(alignment: .leading, spacing: 10) {
-                Text("Тип профиля")
+                Text(L10n.Brand.profileType)
                     .font(.kadroFootnote)
                     .foregroundColor(.kadroWarmGray)
                 
@@ -103,7 +103,7 @@ struct BrandView: View {
                                     .font(.system(size: 20, weight: .medium))
                                     .foregroundColor(selectedUserType == type ? .kadroCharcoal : .kadroLime)
                                 
-                                Text(type.rawValue)
+                                Text(type.displayName)
                                     .font(.kadroCaption)
                                     .foregroundColor(selectedUserType == type ? .kadroCharcoal : .kadroWarmGray)
                                     .multilineTextAlignment(.center)
@@ -122,14 +122,14 @@ struct BrandView: View {
     
     private var toneSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            KadroSectionHeader(title: "Тон коммуникации")
-            
+            KadroSectionHeader(title: L10n.Brand.toneSection)
+
             KadroCard {
                 VStack(spacing: 18) {
-                    toneSlider(title: "Экспертность", leftLabel: "Экспертный", rightLabel: "Простой", value: $toneExpertSimple)
-                    toneSlider(title: "Теплота", leftLabel: "Тёплый", rightLabel: "Строгий", value: $toneWarmStrict)
-                    toneSlider(title: "Смелость", leftLabel: "Смелый", rightLabel: "Нейтральный", value: $toneBoldNeutral)
-                    toneSlider(title: "Детальность", leftLabel: "Кратко", rightLabel: "Детально", value: $toneShortDetailed)
+                    toneSlider(title: L10n.Brand.toneExpert, leftLabel: L10n.Brand.toneExpertLeft, rightLabel: L10n.Brand.toneExpertRight, value: $toneExpertSimple)
+                    toneSlider(title: L10n.Brand.toneWarmth, leftLabel: L10n.Brand.toneWarmthLeft, rightLabel: L10n.Brand.toneWarmthRight, value: $toneWarmStrict)
+                    toneSlider(title: L10n.Brand.toneBoldness, leftLabel: L10n.Brand.toneBoldnessLeft, rightLabel: L10n.Brand.toneBoldnessRight, value: $toneBoldNeutral)
+                    toneSlider(title: L10n.Brand.toneDetail, leftLabel: L10n.Brand.toneDetailLeft, rightLabel: L10n.Brand.toneDetailRight, value: $toneShortDetailed)
                 }
             }
         }
@@ -137,14 +137,14 @@ struct BrandView: View {
     
     private var writingRulesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            KadroSectionHeader(title: "Правила текста")
-            
+            KadroSectionHeader(title: L10n.Brand.writingRules)
+
             KadroCard {
                 VStack(spacing: 14) {
-                    brandTextField(title: "Часто использовать", text: $wordsToUse, placeholder: "Слова и фразы, которые вы любите")
-                    brandTextField(title: "Избегать", text: $wordsToAvoid, placeholder: "Слова, которые не подходят бренду")
-                    brandTextField(title: "Стиль CTA", text: $ctaStyle, placeholder: "Как вы призываете к действию?")
-                    brandTextField(title: "Любимые фразы", text: $favoritePhrases, placeholder: "Фразы, которые вас характеризуют")
+                    brandTextField(title: L10n.Brand.wordsToUse, text: $wordsToUse, placeholder: L10n.Brand.wordsToUsePlaceholder)
+                    brandTextField(title: L10n.Brand.wordsToAvoid, text: $wordsToAvoid, placeholder: L10n.Brand.wordsToAvoidPlaceholder)
+                    brandTextField(title: L10n.Brand.ctaStyle, text: $ctaStyle, placeholder: L10n.Brand.ctaStylePlaceholder)
+                    brandTextField(title: L10n.Brand.favoritePhrases, text: $favoritePhrases, placeholder: L10n.Brand.favoritePhrasesPlaceholder)
                 }
             }
         }
@@ -152,7 +152,7 @@ struct BrandView: View {
     
     private var visualStyleSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            KadroSectionHeader(title: "Визуальный стиль")
+            KadroSectionHeader(title: L10n.Brand.sectionVisualStyle)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
@@ -169,7 +169,7 @@ struct BrandView: View {
                                             .stroke(selectedMood == mood ? Color.kadroLime : Color.clear, lineWidth: 3)
                                     )
                                 
-                                Text(mood.rawValue)
+                                Text(mood.displayName)
                                     .font(.kadroChip)
                                     .foregroundColor(selectedMood == mood ? .kadroCharcoal : .kadroWarmGray)
                             }
@@ -185,7 +185,7 @@ struct BrandView: View {
     
     private var stylePackSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Style packs")
+            Text(L10n.Brand.stylePacks)
                 .font(.kadroTitle3)
                 .foregroundColor(.kadroCharcoal)
             
@@ -240,7 +240,7 @@ struct BrandView: View {
             if let selectedStylePack {
                 KadroCard {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Выбранный style pack: \(selectedStylePack.displayName)")
+                        Text(L10n.Brand.selectedStylePack(selectedStylePack.displayName))
                             .font(.kadroBodyMedium)
                             .foregroundColor(.kadroCharcoal)
                         Text(selectedStylePack.moodDescription)
@@ -267,9 +267,9 @@ struct BrandView: View {
     private var advancedVisualSection: some View {
         KadroCard {
             VStack(spacing: 14) {
-                brandTextField(title: "Палитра", text: $palettePreference, placeholder: "Например: warm ivory, graphite, muted gold")
-                brandTextField(title: "Стиль обложки", text: $coverStyle, placeholder: "Например: крупный заголовок + одна фокусная зона")
-                multilineField(title: "Любимые референсы / лучшие примеры", text: $bestExamples, placeholder: "Ссылки, заметки или описания лучших постов, которые стоит использовать как reference.")
+                brandTextField(title: L10n.Brand.palette, text: $palettePreference, placeholder: L10n.Brand.palettePlaceholder)
+                brandTextField(title: L10n.Brand.coverStyle, text: $coverStyle, placeholder: L10n.Brand.coverStylePlaceholder)
+                multilineField(title: L10n.Brand.references, text: $bestExamples, placeholder: L10n.Brand.referencesPlaceholder)
             }
         }
     }

@@ -19,12 +19,12 @@ struct MainTabView: View {
                 HomeView()
             }
             
-            Tab(TabItem.create.title, systemImage: TabItem.create.icon, value: .create) {
-                CreateFlowView()
-            }
-            
             Tab(TabItem.content.title, systemImage: TabItem.content.icon, value: .content) {
                 ContentLibraryView()
+            }
+            
+            Tab(TabItem.create.title, systemImage: TabItem.create.icon, value: .create) {
+                CreateFlowView()
             }
             
             Tab(TabItem.calendar.title, systemImage: TabItem.calendar.icon, value: .calendar) {

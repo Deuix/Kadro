@@ -18,10 +18,10 @@ enum CreateStep: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .service: return "Сервис"
-        case .format: return "Формат"
-        case .idea: return "Идея"
-        case .refine: return "Стиль"
+        case .service: return L10n.Create.stepService
+        case .format: return L10n.Create.stepFormat
+        case .idea: return L10n.Create.stepIdea
+        case .refine: return L10n.Create.stepRefine
         }
     }
 }
@@ -57,10 +57,10 @@ enum CreateService: String, CaseIterable, Identifiable {
     
     var subtitle: String {
         switch self {
-        case .instagram: return "Посты, сторис и карусели"
-        case .tiktok: return "Скоро"
-        case .x: return "Скоро"
-        case .other: return "Скоро"
+        case .instagram: return L10n.Create.serviceInstagramSubtitle
+        case .tiktok: return L10n.Create.serviceComingSoon
+        case .x: return L10n.Create.serviceComingSoon
+        case .other: return L10n.Create.serviceComingSoon
         }
     }
     
@@ -86,9 +86,9 @@ enum InstagramCreateFormat: String, CaseIterable, Identifiable {
     
     var subtitle: String {
         switch self {
-        case .post: return "Один сильный визуал + короткий текст"
-        case .story: return "Вертикальный сторис-драфт"
-        case .carousel: return "Слайды с чёткой структурой"
+        case .post: return L10n.Create.formatPostSubtitle
+        case .story: return L10n.Create.formatStorySubtitle
+        case .carousel: return L10n.Create.formatCarouselSubtitle
         }
     }
     
@@ -114,10 +114,17 @@ enum InstagramPostCanvas: String, CaseIterable, Identifiable {
         }
     }
     
+    var displayName: String {
+        switch self {
+        case .square: return L10n.Create.canvasSquare
+        case .portrait: return L10n.Create.canvasPortrait
+        }
+    }
+
     var subtitle: String {
         switch self {
-        case .square: return "1:1 · компактно и чисто"
-        case .portrait: return "4:5 · больше воздуха и акцента"
+        case .square: return L10n.Create.canvasSquareSubtitle
+        case .portrait: return L10n.Create.canvasPortraitSubtitle
         }
     }
     
@@ -138,6 +145,7 @@ struct CreateFlowView: View {
     
     @State private var currentStep: CreateStep = .service
     @State private var selectedService: CreateService?
+    @State private var selectedContentLanguage: String = "Русский"
     @State private var selectedInstagramFormat: InstagramCreateFormat?
     @State private var selectedPostCanvas: InstagramPostCanvas = .portrait
     @State private var selectedCarouselSlideCount: Int = 7
@@ -156,6 +164,12 @@ struct CreateFlowView: View {
     private let stylePacks = StylePackLibrary.packs
     private let transcriptionService = KadroVoiceTranscriptionService()
     private let carouselSlideOptions = Array(4...10)
+    private let supportedContentLanguages = ["Русский", "English", "Türkçe", "Azərbaycan dili"]
+    
+    private var defaultContentLanguage: String {
+        let candidate = profiles.first?.language.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return candidate.isEmpty ? "Русский" : candidate
+    }
     
     private var resolvedOutputType: ContentType? {
         selectedInstagramFormat?.outputType
@@ -193,15 +207,15 @@ struct CreateFlowView: View {
     
     private var primaryButtonTitle: String {
         switch currentStep {
-        case .service: return "Продолжить"
-        case .format: return "Далее"
-        case .idea: return "Продолжить"
+        case .service: return L10n.Create.continueAction
+        case .format: return L10n.Create.next
+        case .idea: return L10n.Create.continueAction
         case .refine:
             switch selectedInstagramFormat {
-            case .post: return "Создать пост"
-            case .story: return "Создать сторис"
-            case .carousel: return "Создать карусель"
-            case .none: return "Создать"
+            case .post: return L10n.Create.createPost
+            case .story: return L10n.Create.createStory
+            case .carousel: return L10n.Create.createCarousel
+            case .none: return L10n.Create.createGeneric
             }
         }
     }
@@ -224,17 +238,11 @@ struct CreateFlowView: View {
     }
     
     private var loadingTitle: String {
-        if isTranscribingVoiceNote {
-            return "Обрабатываем голос"
-        }
-        return "Создаём контент"
+        isTranscribingVoiceNote ? L10n.Create.loadingVoiceTitle : L10n.Create.loadingContentTitle
     }
-    
+
     private var loadingSubtitle: String {
-        if isTranscribingVoiceNote {
-            return "Преобразуем запись в аккуратный текст, который можно сразу отредактировать."
-        }
-        return "Готовим чистый и понятный Instagram-драфт с учётом выбранного тона, цели и визуального стиля."
+        isTranscribingVoiceNote ? L10n.Create.loadingVoiceSubtitle : L10n.Create.loadingContentSubtitle
     }
     
     var body: some View {
@@ -262,7 +270,7 @@ struct CreateFlowView: View {
                 .background(Color.kadroIvory)
             }
             .background(Color.kadroIvory)
-            .navigationTitle("Создать")
+            .navigationTitle(L10n.Create.navTitle)
             .navigationBarTitleDisplayMode(.large)
             .safeAreaInset(edge: .bottom) {
                 bottomBar
@@ -271,18 +279,18 @@ struct CreateFlowView: View {
                 GeneratedContentView(result: result)
             }
             .alert(
-                "Что-то пошло не так",
+                L10n.Common.errorTitle,
                 isPresented: Binding(
                     get: { appErrorMessage != nil },
                     set: { if !$0 { appErrorMessage = nil } }
                 ),
                 actions: {
-                    Button("Ок", role: .cancel) {
+                    Button(L10n.Common.ok, role: .cancel) {
                         appErrorMessage = nil
                     }
                 },
                 message: {
-                    Text(appErrorMessage ?? "Попробуйте ещё раз.")
+                    Text(appErrorMessage ?? L10n.Common.errorMessage)
                 }
             )
             .overlay {
@@ -327,9 +335,9 @@ struct CreateFlowView: View {
     private var serviceStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
-                eyebrow: "Шаг 1",
-                title: "Где публикуем?",
-                subtitle: "Сейчас идеально оттачиваем Instagram. Остальные платформы подключим следом."
+                eyebrow: L10n.Create.stepEyebrow(1),
+                title: L10n.Create.step1Title,
+                subtitle: L10n.Create.step1Subtitle
             )
             
             VStack(spacing: 12) {
@@ -363,7 +371,7 @@ struct CreateFlowView: View {
                                         .foregroundColor(.kadroLime)
                                 }
                             } else {
-                                KadroStatusBadge(title: "Скоро", color: .kadroWarmGray)
+                                KadroStatusBadge(title: L10n.Create.serviceComingSoon, color: .kadroWarmGray)
                             }
                         }
                         .padding(16)
@@ -378,6 +386,24 @@ struct CreateFlowView: View {
                     .buttonStyle(.plain)
                 }
             }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L10n.Create.contentLanguage)
+                    .font(.kadroTitle3)
+                    .foregroundColor(.kadroCharcoal)
+
+                Text(L10n.Create.contentLanguageHint)
+                    .font(.kadroCallout)
+                    .foregroundColor(.kadroWarmGray)
+                
+                FlowLayout(spacing: 10) {
+                    ForEach(supportedContentLanguages, id: \.self) { language in
+                        KadroChip(title: language, isSelected: selectedContentLanguage == language) {
+                            selectedContentLanguage = language
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -386,9 +412,9 @@ struct CreateFlowView: View {
     private var formatStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
-                eyebrow: "Шаг 2",
-                title: "Что создаём для Instagram?",
-                subtitle: "Выберите формат, а для Post — ещё и тип изображения."
+                eyebrow: L10n.Create.stepEyebrow(2),
+                title: L10n.Create.step2Title,
+                subtitle: L10n.Create.step2Subtitle
             )
             
             VStack(spacing: 12) {
@@ -437,7 +463,7 @@ struct CreateFlowView: View {
             
             if selectedInstagramFormat == .post {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Тип изображения")
+                    Text(L10n.Create.canvasType)
                         .font(.kadroTitle3)
                         .foregroundColor(.kadroCharcoal)
                     
@@ -449,7 +475,7 @@ struct CreateFlowView: View {
                                 }
                             } label: {
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text(canvas.rawValue)
+                                    Text(canvas.displayName)
                                         .font(.kadroBodyMedium)
                                         .foregroundColor(.kadroCharcoal)
                                     Text(canvas.subtitle)
@@ -473,11 +499,11 @@ struct CreateFlowView: View {
                 }
             } else if selectedInstagramFormat == .carousel {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Сколько слайдов?")
+                    Text(L10n.Create.slideCount)
                         .font(.kadroTitle3)
                         .foregroundColor(.kadroCharcoal)
-                    
-                    Text("Выберите, сколько слайдов нужно в карусели. Генерация будет ориентироваться именно на это число.")
+
+                    Text(L10n.Create.slideCountHint)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                     
@@ -498,13 +524,13 @@ struct CreateFlowView: View {
     private var ideaStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
-                eyebrow: "Шаг 3",
+                eyebrow: L10n.Create.stepEyebrow(3),
                 title: ideaStepTitle,
-                subtitle: "Можно написать текстом или просто надиктовать голосом. Всё максимально просто."
+                subtitle: L10n.Create.step3Subtitle
             )
-            
+
             ideaEditorSection(
-                title: "Ваш ввод",
+                title: L10n.Create.ideaInputLabel,
                 placeholder: ideaPlaceholder
             )
             
@@ -517,10 +543,10 @@ struct CreateFlowView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Голосовой ввод")
+                        Text(L10n.Create.voiceInputTitle)
                             .font(.kadroBodyMedium)
                             .foregroundColor(.kadroCharcoal)
-                        Text(voiceRecorder.isRecording ? "Говорите свободно — мысль не обязана быть идеальной." : "Запись автоматически превратится в редактируемый текст.")
+                        Text(voiceRecorder.isRecording ? L10n.Create.voiceInputRecordingHint : L10n.Create.voiceInputHint)
                             .font(.kadroFootnote)
                             .foregroundColor(.kadroWarmGray)
                     }
@@ -545,7 +571,7 @@ struct CreateFlowView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: voiceRecorder.isRecording ? "stop.fill" : "mic.fill")
-                            Text(voiceRecorder.isRecording ? "Остановить" : "Записать")
+                            Text(voiceRecorder.isRecording ? L10n.Create.voiceStop : L10n.Create.voiceRecord)
                         }
                         .font(.kadroButton)
                         .foregroundColor(voiceRecorder.isRecording ? .kadroSoftWhite : .kadroCharcoal)
@@ -572,16 +598,16 @@ struct CreateFlowView: View {
                 }
                 
                 if isTranscribingVoiceNote {
-                    Text("Добавляем расшифровку в текст…")
+                    Text(L10n.Create.voiceTranscribing)
                         .font(.kadroCaption)
                         .foregroundColor(.kadroWarmGray)
                 } else if let lastTranscription {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Распознано: \(lastTranscription.model)")
+                        Text(L10n.Create.voiceRecognized(lastTranscription.model))
                             .font(.kadroCaption)
                             .foregroundColor(.kadroWarmGray)
                         if lastTranscription.fallbackUsed == true {
-                            Text(lastTranscription.fallbackReason ?? "Использован fallback для транскрибации")
+                            Text(lastTranscription.fallbackReason ?? "")
                                 .font(.kadroCaption)
                                 .foregroundColor(.orange)
                         }
@@ -622,12 +648,12 @@ struct CreateFlowView: View {
             }
             
             HStack {
-                Text("\(inputText.count) символов")
+                Text(L10n.Create.charCount(inputText.count))
                     .font(.kadroCaption)
                     .foregroundColor(.kadroWarmGray)
                 Spacer()
                 if lastTranscription != nil {
-                    Text("Голос добавлен")
+                    Text(L10n.Create.voiceAdded)
                         .font(.kadroCaption)
                         .foregroundColor(.kadroLime)
                 }
@@ -640,52 +666,53 @@ struct CreateFlowView: View {
     private var refineStep: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepHeader(
-                eyebrow: "Шаг 4",
-                title: "Финальные настройки",
-                subtitle: "Последний шаг: задайте настроение текста, цель и визуальный стиль."
+                eyebrow: L10n.Create.stepEyebrow(4),
+                title: L10n.Create.step4Title,
+                subtitle: L10n.Create.step4Subtitle
             )
             
             KadroCard {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Ваш выбор")
+                    Text(L10n.Create.yourChoices)
                         .font(.kadroFootnote)
                         .foregroundColor(.kadroWarmGray)
                     
                     FlowLayout(spacing: 8) {
                         summaryChip("Instagram")
+                        summaryChip(selectedContentLanguage)
                         if let selectedInstagramFormat {
                             summaryChip(selectedInstagramFormat.rawValue)
                         }
                         if selectedInstagramFormat == .post {
-                            summaryChip(selectedPostCanvas.rawValue + " " + selectedPostCanvas.aspectRatio)
+                            summaryChip(selectedPostCanvas.displayName + " " + selectedPostCanvas.aspectRatio)
                         }
                         if selectedInstagramFormat == .carousel {
-                            summaryChip("\(selectedCarouselSlideCount) слайдов")
+                            summaryChip(L10n.Create.slidesCount(selectedCarouselSlideCount))
                         }
                     }
                 }
             }
             
             VStack(alignment: .leading, spacing: 10) {
-                Text("Тон")
+                Text(L10n.Create.toneLabel)
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
                 FlowLayout(spacing: 8) {
                     ForEach(ContentTone.allCases) { tone in
-                        KadroChip(title: tone.rawValue, isSelected: selectedTone == tone) {
+                        KadroChip(title: tone.displayName, isSelected: selectedTone == tone) {
                             selectedTone = selectedTone == tone ? nil : tone
                         }
                     }
                 }
             }
-            
+
             VStack(alignment: .leading, spacing: 10) {
-                Text("Цель")
+                Text(L10n.Create.goalLabel)
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
                 FlowLayout(spacing: 8) {
                     ForEach(ContentGoal.allCases) { goal in
-                        KadroChip(title: goal.rawValue, isSelected: selectedGoal == goal) {
+                        KadroChip(title: goal.displayName, isSelected: selectedGoal == goal) {
                             selectedGoal = selectedGoal == goal ? nil : goal
                         }
                     }
@@ -708,11 +735,11 @@ struct CreateFlowView: View {
     
     private var stylePackPickerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Стиль визуала")
+            Text(L10n.Create.visualStyle)
                 .font(.kadroTitle3)
                 .foregroundColor(.kadroCharcoal)
-            
-            Text("Выберите визуальное направление. После генерации изображение можно сразу пересобрать или уточнить промптом.")
+
+            Text(L10n.Create.visualStyleHint)
                 .font(.kadroCallout)
                 .foregroundColor(.kadroWarmGray)
             
@@ -755,7 +782,7 @@ struct CreateFlowView: View {
     private var bottomBar: some View {
         HStack(spacing: 12) {
             if currentStep != .service {
-                KadroSecondaryButton(title: "Назад") {
+                KadroSecondaryButton(title: L10n.Create.back) {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                         if let previous = CreateStep(rawValue: currentStep.rawValue - 1) {
                             currentStep = previous
@@ -811,7 +838,7 @@ struct CreateFlowView: View {
                 selectedService = service
             }
         } else {
-            appErrorMessage = "Пока полностью оттачиваем Instagram-first flow. Остальные платформы добавим следующим этапом."
+            appErrorMessage = L10n.Create.serviceUnavailable
         }
     }
     
@@ -835,7 +862,7 @@ struct CreateFlowView: View {
         appErrorMessage = nil
         
         do {
-            let response = try await transcriptionService.transcribe(audioURL: url, languageHint: profiles.first?.language ?? "Русский")
+            let response = try await transcriptionService.transcribe(audioURL: url, languageHint: selectedContentLanguage)
             mergeTranscript(response.transcript)
             lastTranscription = response
             lastTranscribedRecordingIdentifier = url.lastPathComponent
@@ -873,6 +900,7 @@ struct CreateFlowView: View {
             tone: selectedTone,
             goal: selectedGoal,
             platform: .instagram,
+            contentLanguage: selectedContentLanguage,
             formatDetail: resolvedFormatDetail,
             preferredImageAspectRatio: resolvedPreferredImageAspectRatio,
             desiredSlideCount: resolvedDesiredSlideCount,
@@ -900,6 +928,7 @@ struct CreateFlowView: View {
         if selectedStylePackID.isEmpty {
             selectedStylePackID = stylePacks.first?.id ?? ""
         }
+        selectedContentLanguage = defaultContentLanguage
         
         guard let draft = appState.consumeCreateDraft() else { return }
         selectedService = .instagram
@@ -945,6 +974,7 @@ struct CreateFlowView: View {
     private func resetFlow() {
         currentStep = .service
         selectedService = nil
+        selectedContentLanguage = defaultContentLanguage
         selectedInstagramFormat = nil
         selectedPostCanvas = .portrait
         selectedCarouselSlideCount = 7
@@ -971,68 +1001,20 @@ struct CreateFlowView: View {
     
     private var ideaStepTitle: String {
         switch selectedInstagramFormat {
-        case .post: return "О чём будет пост?"
-        case .story: return "Что хотим сказать в сторис?"
-        case .carousel: return "О чём будет карусель?"
-        case .none: return "О чём будет контент?"
+        case .post: return L10n.Create.ideaPostTitle
+        case .story: return L10n.Create.ideaStoryTitle
+        case .carousel: return L10n.Create.ideaCarouselTitle
+        case .none: return L10n.Create.ideaGenericTitle
         }
     }
-    
+
     private var ideaPlaceholder: String {
         switch selectedInstagramFormat {
-        case .post:
-            return "Например: хочу короткий и стильный пост о том, почему экспертному бренду нужен визуальный ритм, а не просто красивые картинки"
-        case .story:
-            return "Например: хочу сторис о запуске продукта, чтобы мягко прогреть аудиторию и показать ценность"
-        case .carousel:
-            return "Например: хочу карусель про 5 ошибок в визуале Instagram, которые делают контент дешевле на вид"
-        case .none:
-            return "Опишите идею в свободной форме"
+        case .post: return L10n.Create.ideaPostPlaceholder
+        case .story: return L10n.Create.ideaStoryPlaceholder
+        case .carousel: return L10n.Create.ideaCarouselPlaceholder
+        case .none: return L10n.Create.ideaGenericPlaceholder
         }
-    }
-}
-
-// MARK: - Flow Layout
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = computeLayout(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = computeLayout(proposal: proposal, subviews: subviews)
-        for (index, position) in result.positions.enumerated() {
-            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
-        }
-    }
-    
-    private func computeLayout(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-        var totalHeight: CGFloat = 0
-        
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            
-            if x + size.width > maxWidth, x > 0 {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            
-            positions.append(CGPoint(x: x, y: y))
-            rowHeight = max(rowHeight, size.height)
-            x += size.width + spacing
-            totalHeight = y + rowHeight
-        }
-        
-        return (CGSize(width: maxWidth, height: totalHeight), positions)
     }
 }
 

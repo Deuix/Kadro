@@ -17,12 +17,14 @@ struct HomeView: View {
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 0..<6: return "Доброй ночи,"
-        case 6..<12: return "Доброе утро,"
-        case 12..<18: return "Добрый день,"
-        default: return "Добрый вечер,"
+        case 0..<6: return L10n.Home.greetingNight
+        case 6..<12: return L10n.Home.greetingMorning
+        case 12..<18: return L10n.Home.greetingAfternoon
+        default: return L10n.Home.greetingEvening
         }
     }
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationStack {
@@ -35,7 +37,7 @@ struct HomeView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .background(Color.kadroIvory)
+            .background(Color.kadroBackground(for: colorScheme))
             .navigationBarHidden(true)
         }
     }
@@ -47,11 +49,11 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(greeting)
                     .font(.custom("New York", size: 24).weight(.medium))
-                    .foregroundColor(.kadroWarmGray)
+                    .foregroundColor(.kadroSecondary(for: colorScheme))
                 
-                Text("Криэйтор ✦")
+                Text(L10n.Home.creatorBadge)
                     .font(.custom("New York", size: 36).weight(.bold))
-                    .foregroundColor(.kadroCharcoal)
+                    .foregroundColor(.kadroPrimary(for: colorScheme))
             }
             
             Spacer()
@@ -74,10 +76,10 @@ struct HomeView: View {
                             .font(.system(size: 24, weight: .regular))
                             .foregroundColor(.kadroCharcoal)
                         Spacer()
-                        Text("Создать контент")
+                        Text(L10n.Home.createContent)
                             .font(.kadroTitle2)
                             .foregroundColor(.kadroCharcoal)
-                        Text("С чистого листа или из идеи")
+                        Text(L10n.Home.createContentSubtitle)
                             .font(.kadroFootnote)
                             .foregroundColor(.kadroCharcoal.opacity(0.7))
                     }
@@ -101,19 +103,19 @@ struct HomeView: View {
             // Secondary row
             HStack(spacing: 12) {
                 bentoSecondaryButton(
-                    title: "Карусель",
+                    title: L10n.Home.carousel,
                     icon: "rectangle.split.3x1",
                     color: .kadroCharcoal,
                     textColor: .white
                 ) {
                     appState.openCreate(outputType: .carousel)
                 }
-                
+
                 bentoSecondaryButton(
-                    title: "Reels",
+                    title: L10n.Home.reels,
                     icon: "play.rectangle",
-                    color: .kadroSoftWhite,
-                    textColor: .kadroCharcoal
+                    color: Color.kadroCard(for: colorScheme),
+                    textColor: .kadroPrimary(for: colorScheme)
                 ) {
                     appState.openCreate(outputType: .reels)
                 }
@@ -159,17 +161,17 @@ struct HomeView: View {
     private var recentDraftsCarousel: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Черновики")
+                Text(L10n.Home.drafts)
                     .font(.custom("New York", size: 22).weight(.medium))
-                    .foregroundColor(.kadroCharcoal)
-                
+                    .foregroundColor(.kadroPrimary(for: colorScheme))
+
                 Spacer()
-                
-                Button("Все") {
+
+                Button(L10n.Home.all) {
                     appState.selectedTab = .content
                 }
                 .font(.kadroFootnote.weight(.medium))
-                .foregroundColor(.kadroWarmGray)
+                .foregroundColor(.kadroSecondary(for: colorScheme))
             }
             .padding(.horizontal, 24)
             
@@ -180,17 +182,17 @@ struct HomeView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "plus.dashed")
                             .font(.system(size: 32, weight: .light))
-                            .foregroundColor(.kadroWarmGray)
-                        Text("Создать первый проект")
+                            .foregroundColor(.kadroSecondary(for: colorScheme))
+                        Text(L10n.Home.createFirstProject)
                             .font(.kadroCallout)
-                            .foregroundColor(.kadroWarmGray)
+                            .foregroundColor(.kadroSecondary(for: colorScheme))
                     }
                     .frame(width: 200, height: 260)
-                    .background(Color.kadroSoftWhite)
+                    .background(Color.kadroCard(for: colorScheme))
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.kadroSand, style: StrokeStyle(lineWidth: 1, dash: [6]))
+                            .stroke(Color.kadroBorderColor(for: colorScheme), style: StrokeStyle(lineWidth: 1, dash: [6]))
                     )
                 }
                 .buttonStyle(.plain)
@@ -214,28 +216,40 @@ struct HomeView: View {
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 // Card Upper Part - "Photo" area
-                ZStack {
-                    Color.kadroIvory
-                    
-                    Image(systemName: project.type.icon)
-                        .font(.system(size: 36, weight: .light))
-                        .foregroundColor(.kadroWarmGray.opacity(0.5))
+                Group {
+                    if let imageData = project.generatedCoverImageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 160)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    } else {
+                        ZStack {
+                            Color.kadroBackground(for: colorScheme)
+                            
+                            Image(systemName: project.type.icon)
+                                .font(.system(size: 36, weight: .light))
+                                .foregroundColor(.kadroSecondary(for: colorScheme).opacity(0.5))
+                        }
+                        .frame(height: 160)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
                 }
-                .frame(height: 160)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .padding(8)
                 
                 // Card Lower Part - Meta
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(project.title.isEmpty ? "Без названия" : project.title)
+                    Text(project.title.isEmpty ? L10n.Common.untitled : project.title)
                         .font(.kadroBodyMedium)
-                        .foregroundColor(.kadroCharcoal)
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
                         .lineLimit(1)
-                    
+
                     HStack {
-                        Text(project.type.rawValue)
+                        Text(project.type.displayName)
                             .font(.kadroCaption)
-                            .foregroundColor(.kadroWarmGray)
+                            .foregroundColor(.kadroSecondary(for: colorScheme))
                         Spacer()
                         Circle()
                             .fill(statusColor(for: project.status))
@@ -246,11 +260,11 @@ struct HomeView: View {
                 .padding(.bottom, 16)
             }
             .frame(width: 200)
-            .background(Color.kadroSoftWhite)
+            .background(Color.kadroCard(for: colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 0.5)
+                    .stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
             )
         }
         .buttonStyle(.plain)
@@ -260,30 +274,32 @@ struct HomeView: View {
     
     private var ideasGallery: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Идеи для контента")
+            Text(L10n.Home.contentIdeas)
                 .font(.custom("New York", size: 22).weight(.medium))
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
                 .padding(.horizontal, 24)
-            
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
+                    // Dark card — always dark charcoal bg, ivory text — good in both modes
                     editorialIdeaCard(
-                        tag: "Обучение",
-                        title: "Поделитесь\nэкспертностью",
+                        tag: L10n.Home.ideaEducationTag,
+                        title: L10n.Home.ideaShareExpertise,
                         color: .kadroCharcoal,
                         textColor: .kadroIvory
                     )
-                    
+
+                    // Card that adapts to current surface color
                     editorialIdeaCard(
-                        tag: "Личное",
-                        title: "История\nиз практики",
-                        color: .kadroSoftWhite,
-                        textColor: .kadroCharcoal
+                        tag: L10n.Home.ideaPersonalTag,
+                        title: L10n.Home.ideaPersonalStory,
+                        color: Color.kadroCard(for: colorScheme),
+                        textColor: .kadroPrimary(for: colorScheme)
                     )
-                    
+
                     editorialIdeaCard(
-                        tag: "Продажи",
-                        title: "Покажите\nрезультат",
+                        tag: L10n.Home.ideaSalesTag,
+                        title: L10n.Home.ideaShowResults,
                         color: .kadroLime.opacity(0.3),
                         textColor: .kadroCharcoal
                     )

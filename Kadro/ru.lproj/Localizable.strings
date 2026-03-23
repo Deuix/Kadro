@@ -1,0 +1,347 @@
+/* Common */
+"common.save" = "Сохранить";
+"common.cancel" = "Отмена";
+"common.delete" = "Удалить";
+"common.ok" = "Ок";
+"common.close" = "Закрыть";
+"common.done" = "Готово";
+"common.all" = "Все";
+"common.untitled" = "Без названия";
+"common.create" = "Создать";
+"common.continue" = "Продолжить";
+"common.next" = "Далее";
+"common.error_title" = "Что-то пошло не так";
+"common.error_message" = "Попробуйте ещё раз.";
+
+/* Tabs */
+"tab.home" = "Главная";
+"tab.create" = "Создать";
+"tab.content" = "Контент";
+"tab.calendar" = "Календарь";
+"tab.profile" = "Профиль";
+
+/* Home */
+"home.greeting_night" = "Доброй ночи,";
+"home.greeting_morning" = "Доброе утро,";
+"home.greeting_afternoon" = "Добрый день,";
+"home.greeting_evening" = "Добрый вечер,";
+"home.creator_badge" = "Криэйтор ✦";
+"home.create_content" = "Создать контент";
+"home.create_content_subtitle" = "С чистого листа или из идеи";
+"home.carousel" = "Карусель";
+"home.reels" = "Reels";
+"home.drafts" = "Черновики";
+"home.all" = "Все";
+"home.create_first_project" = "Создать первый проект";
+"home.content_ideas" = "Идеи для контента";
+"home.idea_education_tag" = "Обучение";
+"home.idea_personal_tag" = "Личное";
+"home.idea_sales_tag" = "Продажи";
+"home.idea_share_expertise" = "Поделитесь\nэкспертностью";
+"home.idea_personal_story" = "История\nиз практики";
+"home.idea_show_results" = "Покажите\nрезультат";
+
+/* Settings */
+"settings.title" = "Настройки";
+"settings.section_account" = "Аккаунт";
+"settings.profile" = "Профиль";
+"settings.email" = "Email";
+"settings.email_not_linked" = "Не привязан";
+"settings.section_subscription" = "Подписка";
+"settings.kadro_pro" = "Kadro Pro";
+"settings.free_plan" = "Бесплатный план";
+"settings.restore_purchases" = "Восстановить покупки";
+"settings.section_app" = "Приложение";
+"settings.language" = "Язык";
+"settings.notifications" = "Уведомления";
+"settings.export_data" = "Экспорт данных";
+"settings.section_connections" = "Подключения";
+"settings.connected_platforms" = "Подключённые платформы";
+"settings.section_support" = "Поддержка";
+"settings.help_faq" = "Помощь и FAQ";
+"settings.contact_us" = "Написать нам";
+"settings.rate_app" = "Оценить приложение";
+"settings.section_about" = "О приложении";
+"settings.version" = "Версия";
+"settings.terms" = "Условия использования";
+"settings.privacy" = "Политика конфиденциальности";
+"settings.reset_onboarding" = "Сбросить онбординг";
+"settings.copyright" = "Kadro © 2026";
+"settings.reset_confirm_title" = "Сбросить онбординг?";
+"settings.reset_confirm_message" = "Вы увидите экран приветствия при следующем запуске.";
+"settings.reset_action" = "Сбросить";
+
+/* Onboarding */
+"onboarding.step1_headline" = "Превращай идеи\nв готовый контент";
+"onboarding.step1_subtitle" = "Посты, карусели и сценарии для Reels —\nбыстро, с нужным стилем и структурой.";
+"onboarding.feature1" = "Идея → контент за несколько минут";
+"onboarding.feature2" = "Помнит ваш стиль и голос бренда";
+"onboarding.feature3" = "Карусели, посты и Reels из одной мысли";
+"onboarding.start" = "Начать";
+"onboarding.continue" = "Продолжить";
+"onboarding.step2_title" = "Кто вы?";
+"onboarding.step2_subtitle" = "Это поможет Kadro настроить\nконтент под вас";
+"onboarding.step3_title" = "Что будете создавать?";
+"onboarding.step3_subtitle" = "Можно выбрать несколько форматов";
+"onboarding.step4_title" = "Ваш стиль";
+"onboarding.step4_subtitle" = "Kadro будет писать в вашем голосе";
+"onboarding.tone_voice" = "Тон голоса";
+"onboarding.visual_style" = "Визуальный стиль";
+"onboarding.step5_title" = "Всё готово!";
+"onboarding.step5_subtitle" = "Kadro настроен под вас.\nСоздайте первый контент прямо сейчас.";
+"onboarding.create_first_content" = "Создать первый контент";
+"onboarding.disclaimer" = "Kadro использует ИИ для создания контента.\nВаши данные в безопасности.";
+"onboarding.tone_friendly" = "Дружелюбный";
+"onboarding.tone_expert" = "Экспертный";
+"onboarding.tone_balanced" = "Сбалансированный";
+"onboarding.tone_bold" = "Смелый";
+"onboarding.goal_posts" = "Посты";
+"onboarding.goal_carousels" = "Карусели";
+"onboarding.goal_reels" = "Reels / TikTok";
+"onboarding.goal_content_plan" = "Контент-план";
+
+/* Content Library */
+"content.title" = "Контент";
+"content.search_placeholder" = "Поиск";
+"content.filter_all" = "Все";
+"content.empty_title" = "Библиотека пуста";
+"content.empty_subtitle" = "Создайте свой первый пост, карусель или сценарий";
+"content.create_content" = "Создать контент";
+"content.no_results_title" = "Ничего не найдено";
+"content.no_results_subtitle" = "Попробуйте изменить фильтр\nили поисковый запрос";
+"content.delete_swipe" = "Удалить";
+"content.delete_confirm_title" = "Удалить проект?";
+"content.delete_confirm_action" = "Удалить";
+"content.delete_confirm_message" = "Проект \"%@\" будет удалён без возможности восстановления.";
+
+/* Create Flow */
+"create.nav_title" = "Создать";
+"create.step_service" = "Сервис";
+"create.step_format" = "Формат";
+"create.step_idea" = "Идея";
+"create.step_refine" = "Стиль";
+"create.continue" = "Продолжить";
+"create.next" = "Далее";
+"create.create_post" = "Создать пост";
+"create.create_story" = "Создать сторис";
+"create.create_carousel" = "Создать карусель";
+"create.create_generic" = "Создать";
+"create.loading_voice_title" = "Обрабатываем голос";
+"create.loading_voice_subtitle" = "Преобразуем запись в аккуратный текст, который можно сразу отредактировать.";
+"create.loading_content_title" = "Создаём контент";
+"create.loading_content_subtitle" = "Готовим чистый и понятный Instagram-драфт с учётом выбранного тона, цели и визуального стиля.";
+"create.source_topic" = "Идея или тема";
+"create.source_voice_note" = "Голосовая заметка";
+"create.source_text" = "Текст";
+"create.service_instagram_subtitle" = "Посты, сторис и карусели";
+"create.service_coming_soon" = "Скоро";
+"create.format_post_subtitle" = "Один сильный визуал + короткий текст";
+"create.format_story_subtitle" = "Вертикальный сторис-драфт";
+"create.format_carousel_subtitle" = "Слайды с чёткой структурой";
+"create.canvas_square" = "Квадрат";
+"create.canvas_portrait" = "Вертикальный";
+"create.canvas_square_subtitle" = "1:1 · компактно и чисто";
+"create.canvas_portrait_subtitle" = "4:5 · больше воздуха и акцента";
+"create.step_eyebrow" = "Шаг %d";
+"create.step1_title" = "Где публикуем?";
+"create.step1_subtitle" = "Сейчас идеально оттачиваем Instagram. Остальные платформы подключим следом.";
+"create.step2_title" = "Что создаём для Instagram?";
+"create.step2_subtitle" = "Выберите формат, а для Post — ещё и тип изображения.";
+"create.step3_subtitle" = "Можно написать текстом или просто надиктовать голосом. Всё максимально просто.";
+"create.step4_title" = "Финальные настройки";
+"create.step4_subtitle" = "Последний шаг: задайте настроение текста, цель и визуальный стиль.";
+"create.content_language" = "Язык контента";
+"create.content_language_hint" = "AI будет писать именно на выбранном языке.";
+"create.canvas_type" = "Тип изображения";
+"create.slide_count" = "Сколько слайдов?";
+"create.slide_count_hint" = "Выберите, сколько слайдов нужно в карусели. Генерация будет ориентироваться именно на это число.";
+"create.idea_input_label" = "Ваш ввод";
+"create.voice_input_title" = "Голосовой ввод";
+"create.voice_input_hint" = "Запись автоматически превратится в редактируемый текст.";
+"create.voice_input_recording_hint" = "Говорите свободно — мысль не обязана быть идеальной.";
+"create.voice_stop" = "Остановить";
+"create.voice_record" = "Записать";
+"create.voice_transcribing" = "Добавляем расшифровку в текст…";
+"create.voice_recognized" = "Распознано: %@";
+"create.voice_added" = "Голос добавлен";
+"create.char_count" = "%d символов";
+"create.your_choices" = "Ваш выбор";
+"create.slides_count" = "%d слайдов";
+"create.tone_label" = "Тон";
+"create.goal_label" = "Цель";
+"create.visual_style" = "Стиль визуала";
+"create.visual_style_hint" = "Выберите визуальное направление. После генерации изображение можно сразу пересобрать или уточнить промптом.";
+"create.back" = "Назад";
+"create.service_unavailable" = "Пока полностью оттачиваем Instagram-first flow. Остальные платформы добавим следующим этапом.";
+"create.idea_post_title" = "О чём будет пост?";
+"create.idea_story_title" = "Что хотим сказать в сторис?";
+"create.idea_carousel_title" = "О чём будет карусель?";
+"create.idea_generic_title" = "О чём будет контент?";
+"create.idea_post_placeholder" = "Например: хочу короткий и стильный пост о том, почему экспертному бренду нужен визуальный ритм, а не просто красивые картинки";
+"create.idea_story_placeholder" = "Например: хочу сторис о запуске продукта, чтобы мягко прогреть аудиторию и показать ценность";
+"create.idea_carousel_placeholder" = "Например: хочу карусель про 5 ошибок в визуале Instagram, которые делают контент дешевле на вид";
+"create.idea_generic_placeholder" = "Опишите идею в свободной форме";
+
+/* Generated Content */
+"generated.nav_title" = "Готово";
+"generated.hook" = "Хук";
+"generated.main_text" = "Основной текст";
+"generated.cta" = "CTA";
+"generated.short_version" = "Короткая версия";
+"generated.caption" = "Подпись";
+"generated.hashtags" = "Хэштеги";
+"generated.source_idea" = "Исходная идея";
+"generated.on_screen_text" = "Текст на экране";
+"generated.cover_idea" = "Идея обложки";
+"generated.script_beats" = "Сценарные биты";
+"generated.visual" = "Визуал";
+"generated.visual_loading_title" = "Генерируем визуалы";
+"generated.visual_loading_subtitle" = "Собираем reference-guided image generation prompt.";
+"generated.detail_visual_loading_subtitle" = "Собираем reference-guided image generation prompt на основе style pack и ваших референсов.";
+"generated.use_as_cover" = "Использовать как cover";
+"generated.use_for_slide" = "Использовать для слайда";
+"generated.carousel_slides" = "Слайды карусели";
+"generated.stories_section" = "Сторис";
+"generated.variants" = "Варианты";
+"generated.next_actions" = "Что можно сделать дальше";
+"generated.saved_to_content" = "Сохранено в Контент";
+"generated.visual_error" = "Не удалось создать визуал";
+"generated.new_version" = "Новая версия";
+"generated.reels_section" = "Reels / TikTok";
+"generated.reels_hook" = "Reels hook";
+"generated.sticker_format" = "Стикер: %@";
+"generated.slide_format" = "Слайд %d";
+"generated.story_format" = "Сторис %d";
+"generated.post_main_text" = "Текст поста";
+"generated.visual_section_post" = "Изображение поста";
+"generated.visual_section_generic" = "Visual preview";
+"generated.style_pack_label" = "Style pack: %@";
+"generated.references_found" = "Референсов: %d";
+"generated.no_style_pack" = "Style pack не выбран. Выберите стиль на этапе создания контента.";
+"generated.create_cover_image" = "Создать изображение";
+"generated.regenerate_cover_image" = "Перегенерировать изображение";
+"generated.create_cover" = "Создать cover";
+"generated.regenerate_cover" = "Перегенерировать cover";
+"generated.all_visuals" = "Все visuals";
+"generated.create_slide_visual" = "Создать visual для слайда";
+"generated.regenerate_slide_visual" = "Перегенерировать visual";
+"generated.loading_cover_title" = "Генерируем cover";
+"generated.loading_cover_subtitle" = "Собираем reference-guided prompt для visual cover на основе style pack и ваших референсов.";
+"generated.loading_slide_title" = "Генерируем visual для слайда";
+"generated.loading_slide_subtitle" = "Слайд %d: формируем visual по headline/body и выбранному style pack.";
+"generated.loading_all_slides_title" = "Генерируем visuals для карусели";
+"generated.loading_all_slides_subtitle" = "Слайд %d из %d: %@";
+"generated.slide_error" = "Ошибка на слайде %d: %@";
+"generated.downloading" = "Сохраняем...";
+"generated.download_all" = "Скачать все";
+"generated.save_visual_error" = "Не удалось сохранить сгенерированный визуал.";
+"generated.find_slide_error" = "Не удалось найти слайд для сохранения визуала.";
+"generated.regenerating_title" = "Генерируем новую версию";
+"generated.regenerating_subtitle" = "Создаём новый вариант на основе той же идеи и текущих настроек формата.";
+"generated.no_source_idea" = "У проекта нет исходной идеи для повторной генерации.";
+"generated.detail_no_style_pack" = "Сначала выберите style pack во время создания поста, чтобы мы могли использовать ваши references для visual generation.";
+"generated.copied" = "Скопировано";
+"generated.stories_draft" = "Stories draft";
+"generated.visual_draft" = "Visual draft";
+
+/* Brand */
+"brand.nav_title" = "Бренд";
+"brand.save" = "Сохранить";
+"brand.section_basics" = "Основное";
+"brand.brand_name" = "Название бренда";
+"brand.brand_name_placeholder" = "Ваш бренд или имя";
+"brand.niche" = "Ниша";
+"brand.niche_placeholder" = "Например: фитнес, маркетинг, психология";
+"brand.audience" = "Аудитория";
+"brand.audience_placeholder" = "Кто ваша целевая аудитория?";
+"brand.profile_type" = "Тип профиля";
+"brand.tone_section" = "Тон коммуникации";
+"brand.tone_expert" = "Экспертность";
+"brand.tone_expert_left" = "Экспертный";
+"brand.tone_expert_right" = "Простой";
+"brand.tone_warmth" = "Теплота";
+"brand.tone_warmth_left" = "Тёплый";
+"brand.tone_warmth_right" = "Строгий";
+"brand.tone_boldness" = "Смелость";
+"brand.tone_boldness_left" = "Смелый";
+"brand.tone_boldness_right" = "Нейтральный";
+"brand.tone_detail" = "Детальность";
+"brand.tone_detail_left" = "Кратко";
+"brand.tone_detail_right" = "Детально";
+"brand.writing_rules" = "Правила текста";
+"brand.words_to_use" = "Часто использовать";
+"brand.words_to_use_placeholder" = "Слова и фразы, которые вы любите";
+"brand.words_to_avoid" = "Избегать";
+"brand.words_to_avoid_placeholder" = "Слова, которые не подходят бренду";
+"brand.cta_style" = "Стиль CTA";
+"brand.cta_style_placeholder" = "Как вы призываете к действию?";
+"brand.favorite_phrases" = "Любимые фразы";
+"brand.favorite_phrases_placeholder" = "Фразы, которые вас характеризуют";
+"brand.section_visual_style" = "Визуальный стиль";
+"brand.style_packs" = "Style packs";
+"brand.palette" = "Палитра";
+"brand.palette_placeholder" = "Например: warm ivory, graphite, muted gold";
+"brand.cover_style" = "Стиль обложки";
+"brand.cover_style_placeholder" = "Например: крупный заголовок + одна фокусная зона";
+"brand.references" = "Любимые референсы / лучшие примеры";
+"brand.references_placeholder" = "Ссылки, заметки или описания лучших постов, которые стоит использовать как reference.";
+"brand.selected_style_pack" = "Выбранный style pack: %@";
+
+/* Calendar */
+"calendar.title" = "Календарь";
+"calendar.no_content" = "Нет контента на этот день";
+"calendar.schedule" = "Запланировать";
+"calendar.hints" = "Подсказки";
+"calendar.hint1" = "Среда без контента — добавьте обучающий пост";
+"calendar.hint2" = "Вчерашняя идея может стать каруселью";
+"calendar.mode_picker_label" = "Режим";
+"calendar.mode_week" = "Неделя";
+"calendar.mode_month" = "Месяц";
+
+/* Content Types */
+"content_type.post" = "Пост";
+"content_type.carousel" = "Карусель";
+"content_type.reels" = "Reels/TikTok";
+"content_type.stories" = "Stories";
+"content_type.content_pack" = "Контент-пак";
+
+/* Content Statuses */
+"content_status.draft" = "Черновик";
+"content_status.ready" = "Готово";
+"content_status.scheduled" = "Запланировано";
+"content_status.published" = "Опубликовано";
+
+/* Content Tones */
+"content_tone.educational" = "Обучающий";
+"content_tone.personal" = "Личный";
+"content_tone.sales" = "Продающий";
+"content_tone.authority" = "Экспертный";
+"content_tone.engagement" = "Вовлекающий";
+
+/* Content Goals */
+"content_goal.awareness" = "Узнаваемость";
+"content_goal.trust" = "Доверие";
+"content_goal.sales" = "Продажи";
+"content_goal.engagement" = "Вовлечение";
+"content_goal.education" = "Обучение";
+
+/* User Types */
+"user_type.creator" = "Создатель контента";
+"user_type.expert" = "Эксперт / Коуч";
+"user_type.small_business" = "Малый бизнес";
+"user_type.agency" = "Агентство";
+
+/* Visual Moods */
+"visual_mood.minimal" = "Минимализм";
+"visual_mood.bold" = "Яркий";
+"visual_mood.editorial" = "Редакторский";
+"visual_mood.soft" = "Мягкий";
+"visual_mood.premium" = "Премиум";
+
+/* App Theme */
+"theme.system" = "Системная";
+"theme.light" = "Светлая";
+"theme.dark" = "Тёмная";
+
+"settings.section_appearance" = "Оформление";
+"settings.theme_label" = "Тема";

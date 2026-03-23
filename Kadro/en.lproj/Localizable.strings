@@ -1,0 +1,347 @@
+/* Common */
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+"common.delete" = "Delete";
+"common.ok" = "OK";
+"common.close" = "Close";
+"common.done" = "Done";
+"common.all" = "All";
+"common.untitled" = "Untitled";
+"common.create" = "Create";
+"common.continue" = "Continue";
+"common.next" = "Next";
+"common.error_title" = "Something went wrong";
+"common.error_message" = "Please try again.";
+
+/* Tabs */
+"tab.home" = "Home";
+"tab.create" = "Create";
+"tab.content" = "Content";
+"tab.calendar" = "Calendar";
+"tab.profile" = "Profile";
+
+/* Home */
+"home.greeting_night" = "Good night,";
+"home.greeting_morning" = "Good morning,";
+"home.greeting_afternoon" = "Good afternoon,";
+"home.greeting_evening" = "Good evening,";
+"home.creator_badge" = "Creator ✦";
+"home.create_content" = "Create content";
+"home.create_content_subtitle" = "From scratch or from an idea";
+"home.carousel" = "Carousel";
+"home.reels" = "Reels";
+"home.drafts" = "Drafts";
+"home.all" = "All";
+"home.create_first_project" = "Create first project";
+"home.content_ideas" = "Content ideas";
+"home.idea_education_tag" = "Education";
+"home.idea_personal_tag" = "Personal";
+"home.idea_sales_tag" = "Sales";
+"home.idea_share_expertise" = "Share\nyour expertise";
+"home.idea_personal_story" = "Story\nfrom practice";
+"home.idea_show_results" = "Show\nresults";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.section_account" = "Account";
+"settings.profile" = "Profile";
+"settings.email" = "Email";
+"settings.email_not_linked" = "Not linked";
+"settings.section_subscription" = "Subscription";
+"settings.kadro_pro" = "Kadro Pro";
+"settings.free_plan" = "Free plan";
+"settings.restore_purchases" = "Restore purchases";
+"settings.section_app" = "App";
+"settings.language" = "Language";
+"settings.notifications" = "Notifications";
+"settings.export_data" = "Export data";
+"settings.section_connections" = "Connections";
+"settings.connected_platforms" = "Connected platforms";
+"settings.section_support" = "Support";
+"settings.help_faq" = "Help & FAQ";
+"settings.contact_us" = "Contact us";
+"settings.rate_app" = "Rate the app";
+"settings.section_about" = "About";
+"settings.version" = "Version";
+"settings.terms" = "Terms of use";
+"settings.privacy" = "Privacy policy";
+"settings.reset_onboarding" = "Reset onboarding";
+"settings.copyright" = "Kadro © 2026";
+"settings.reset_confirm_title" = "Reset onboarding?";
+"settings.reset_confirm_message" = "You will see the welcome screen on next launch.";
+"settings.reset_action" = "Reset";
+
+/* Onboarding */
+"onboarding.step1_headline" = "Turn ideas\ninto ready content";
+"onboarding.step1_subtitle" = "Posts, carousels and Reels scripts —\nfast, with the right style and structure.";
+"onboarding.feature1" = "Idea → content in minutes";
+"onboarding.feature2" = "Remembers your style and brand voice";
+"onboarding.feature3" = "Carousels, posts and Reels from one thought";
+"onboarding.start" = "Get started";
+"onboarding.continue" = "Continue";
+"onboarding.step2_title" = "Who are you?";
+"onboarding.step2_subtitle" = "This helps Kadro tailor\ncontent for you";
+"onboarding.step3_title" = "What will you create?";
+"onboarding.step3_subtitle" = "You can select multiple formats";
+"onboarding.step4_title" = "Your style";
+"onboarding.step4_subtitle" = "Kadro will write in your voice";
+"onboarding.tone_voice" = "Tone of voice";
+"onboarding.visual_style" = "Visual style";
+"onboarding.step5_title" = "All set!";
+"onboarding.step5_subtitle" = "Kadro is configured for you.\nCreate your first content right now.";
+"onboarding.create_first_content" = "Create first content";
+"onboarding.disclaimer" = "Kadro uses AI to create content.\nYour data is safe.";
+"onboarding.tone_friendly" = "Friendly";
+"onboarding.tone_expert" = "Expert";
+"onboarding.tone_balanced" = "Balanced";
+"onboarding.tone_bold" = "Bold";
+"onboarding.goal_posts" = "Posts";
+"onboarding.goal_carousels" = "Carousels";
+"onboarding.goal_reels" = "Reels / TikTok";
+"onboarding.goal_content_plan" = "Content plan";
+
+/* Content Library */
+"content.title" = "Content";
+"content.search_placeholder" = "Search";
+"content.filter_all" = "All";
+"content.empty_title" = "Library is empty";
+"content.empty_subtitle" = "Create your first post, carousel or script";
+"content.create_content" = "Create content";
+"content.no_results_title" = "Nothing found";
+"content.no_results_subtitle" = "Try changing the filter\nor search query";
+"content.delete_swipe" = "Delete";
+"content.delete_confirm_title" = "Delete project?";
+"content.delete_confirm_action" = "Delete";
+"content.delete_confirm_message" = "Project \"%@\" will be permanently deleted.";
+
+/* Create Flow */
+"create.nav_title" = "Create";
+"create.step_service" = "Service";
+"create.step_format" = "Format";
+"create.step_idea" = "Idea";
+"create.step_refine" = "Style";
+"create.continue" = "Continue";
+"create.next" = "Next";
+"create.create_post" = "Create post";
+"create.create_story" = "Create story";
+"create.create_carousel" = "Create carousel";
+"create.create_generic" = "Create";
+"create.loading_voice_title" = "Processing voice";
+"create.loading_voice_subtitle" = "Converting recording to clean text you can edit right away.";
+"create.loading_content_title" = "Creating content";
+"create.loading_content_subtitle" = "Preparing a clean Instagram draft with your selected tone, goal and visual style.";
+"create.source_topic" = "Idea or topic";
+"create.source_voice_note" = "Voice note";
+"create.source_text" = "Text";
+"create.service_instagram_subtitle" = "Posts, stories and carousels";
+"create.service_coming_soon" = "Coming soon";
+"create.format_post_subtitle" = "One strong visual + short text";
+"create.format_story_subtitle" = "Vertical story draft";
+"create.format_carousel_subtitle" = "Slides with clear structure";
+"create.canvas_square" = "Square";
+"create.canvas_portrait" = "Portrait";
+"create.canvas_square_subtitle" = "1:1 · compact and clean";
+"create.canvas_portrait_subtitle" = "4:5 · more space and accent";
+"create.step_eyebrow" = "Step %d";
+"create.step1_title" = "Where are we publishing?";
+"create.step1_subtitle" = "We're currently perfecting Instagram. Other platforms coming next.";
+"create.step2_title" = "What are we creating for Instagram?";
+"create.step2_subtitle" = "Choose a format. For Post — also choose the image type.";
+"create.step3_subtitle" = "You can write text or simply dictate by voice. As easy as it gets.";
+"create.step4_title" = "Final settings";
+"create.step4_subtitle" = "Last step: set the text mood, goal, and visual style.";
+"create.content_language" = "Content language";
+"create.content_language_hint" = "AI will write in the selected language.";
+"create.canvas_type" = "Image type";
+"create.slide_count" = "How many slides?";
+"create.slide_count_hint" = "Choose how many slides you need in the carousel. Generation will follow this number.";
+"create.idea_input_label" = "Your input";
+"create.voice_input_title" = "Voice input";
+"create.voice_input_hint" = "Recording will automatically become editable text.";
+"create.voice_input_recording_hint" = "Speak freely — the idea doesn't need to be perfect.";
+"create.voice_stop" = "Stop";
+"create.voice_record" = "Record";
+"create.voice_transcribing" = "Adding transcription to text…";
+"create.voice_recognized" = "Recognized: %@";
+"create.voice_added" = "Voice added";
+"create.char_count" = "%d characters";
+"create.your_choices" = "Your choices";
+"create.slides_count" = "%d slides";
+"create.tone_label" = "Tone";
+"create.goal_label" = "Goal";
+"create.visual_style" = "Visual style";
+"create.visual_style_hint" = "Choose a visual direction. After generation you can rebuild the image or refine it with a prompt.";
+"create.back" = "Back";
+"create.service_unavailable" = "We're currently perfecting Instagram-first flow. Other platforms coming in the next stage.";
+"create.idea_post_title" = "What will the post be about?";
+"create.idea_story_title" = "What do we want to say in the story?";
+"create.idea_carousel_title" = "What will the carousel be about?";
+"create.idea_generic_title" = "What will the content be about?";
+"create.idea_post_placeholder" = "E.g.: I want a short stylish post about why an expert brand needs visual rhythm, not just pretty pictures";
+"create.idea_story_placeholder" = "E.g.: I want a story about a product launch to softly warm up the audience and show value";
+"create.idea_carousel_placeholder" = "E.g.: I want a carousel about 5 Instagram visual mistakes that make content look cheap";
+"create.idea_generic_placeholder" = "Describe your idea in free form";
+
+/* Generated Content */
+"generated.nav_title" = "Done";
+"generated.hook" = "Hook";
+"generated.main_text" = "Main text";
+"generated.cta" = "CTA";
+"generated.short_version" = "Short version";
+"generated.caption" = "Caption";
+"generated.hashtags" = "Hashtags";
+"generated.source_idea" = "Source idea";
+"generated.on_screen_text" = "On-screen text";
+"generated.cover_idea" = "Cover idea";
+"generated.script_beats" = "Script beats";
+"generated.visual" = "Visual";
+"generated.visual_loading_title" = "Generating visuals";
+"generated.visual_loading_subtitle" = "Assembling reference-guided image generation prompt.";
+"generated.detail_visual_loading_subtitle" = "Assembling reference-guided image generation prompt based on style pack and your references.";
+"generated.use_as_cover" = "Use as cover";
+"generated.use_for_slide" = "Use for slide";
+"generated.carousel_slides" = "Carousel slides";
+"generated.stories_section" = "Stories";
+"generated.variants" = "Variants";
+"generated.next_actions" = "What to do next";
+"generated.saved_to_content" = "Saved to Content";
+"generated.visual_error" = "Couldn't create visual";
+"generated.new_version" = "New version";
+"generated.reels_section" = "Reels / TikTok";
+"generated.reels_hook" = "Reels hook";
+"generated.sticker_format" = "Sticker: %@";
+"generated.slide_format" = "Slide %d";
+"generated.story_format" = "Story %d";
+"generated.post_main_text" = "Post text";
+"generated.visual_section_post" = "Post image";
+"generated.visual_section_generic" = "Visual preview";
+"generated.style_pack_label" = "Style pack: %@";
+"generated.references_found" = "References found: %d";
+"generated.no_style_pack" = "No style pack selected. Choose a style when creating content.";
+"generated.create_cover_image" = "Create image";
+"generated.regenerate_cover_image" = "Regenerate image";
+"generated.create_cover" = "Create cover";
+"generated.regenerate_cover" = "Regenerate cover";
+"generated.all_visuals" = "All visuals";
+"generated.create_slide_visual" = "Create visual for slide";
+"generated.regenerate_slide_visual" = "Regenerate visual";
+"generated.loading_cover_title" = "Generating cover";
+"generated.loading_cover_subtitle" = "Building reference-guided prompt for visual cover based on style pack and your references.";
+"generated.loading_slide_title" = "Generating visual for slide";
+"generated.loading_slide_subtitle" = "Slide %d: building visual from headline/body and selected style pack.";
+"generated.loading_all_slides_title" = "Generating visuals for carousel";
+"generated.loading_all_slides_subtitle" = "Slide %d of %d: %@";
+"generated.slide_error" = "Error on slide %d: %@";
+"generated.downloading" = "Saving...";
+"generated.download_all" = "Download all";
+"generated.save_visual_error" = "Could not save generated visual.";
+"generated.find_slide_error" = "Could not find slide to save visual.";
+"generated.regenerating_title" = "Generating new version";
+"generated.regenerating_subtitle" = "Creating a new variant from the same idea and current format settings.";
+"generated.no_source_idea" = "No source idea to regenerate from.";
+"generated.detail_no_style_pack" = "Choose a style pack when creating the post to use your references for visual generation.";
+"generated.copied" = "Copied";
+"generated.stories_draft" = "Stories draft";
+"generated.visual_draft" = "Visual draft";
+
+/* Brand */
+"brand.nav_title" = "Brand";
+"brand.save" = "Save";
+"brand.section_basics" = "Basics";
+"brand.brand_name" = "Brand name";
+"brand.brand_name_placeholder" = "Your brand or name";
+"brand.niche" = "Niche";
+"brand.niche_placeholder" = "E.g.: fitness, marketing, psychology";
+"brand.audience" = "Audience";
+"brand.audience_placeholder" = "Who is your target audience?";
+"brand.profile_type" = "Profile type";
+"brand.tone_section" = "Tone of communication";
+"brand.tone_expert" = "Expertise";
+"brand.tone_expert_left" = "Expert";
+"brand.tone_expert_right" = "Simple";
+"brand.tone_warmth" = "Warmth";
+"brand.tone_warmth_left" = "Warm";
+"brand.tone_warmth_right" = "Strict";
+"brand.tone_boldness" = "Boldness";
+"brand.tone_boldness_left" = "Bold";
+"brand.tone_boldness_right" = "Neutral";
+"brand.tone_detail" = "Detail";
+"brand.tone_detail_left" = "Brief";
+"brand.tone_detail_right" = "Detailed";
+"brand.writing_rules" = "Writing rules";
+"brand.words_to_use" = "Use often";
+"brand.words_to_use_placeholder" = "Words and phrases you love";
+"brand.words_to_avoid" = "Avoid";
+"brand.words_to_avoid_placeholder" = "Words that don't fit the brand";
+"brand.cta_style" = "CTA style";
+"brand.cta_style_placeholder" = "How do you call to action?";
+"brand.favorite_phrases" = "Favorite phrases";
+"brand.favorite_phrases_placeholder" = "Phrases that characterize you";
+"brand.section_visual_style" = "Visual style";
+"brand.style_packs" = "Style packs";
+"brand.palette" = "Palette";
+"brand.palette_placeholder" = "E.g.: warm ivory, graphite, muted gold";
+"brand.cover_style" = "Cover style";
+"brand.cover_style_placeholder" = "E.g.: large title + one focus zone";
+"brand.references" = "References / Best examples";
+"brand.references_placeholder" = "Links, notes or descriptions of best posts to use as reference.";
+"brand.selected_style_pack" = "Selected style pack: %@";
+
+/* Calendar */
+"calendar.title" = "Calendar";
+"calendar.no_content" = "No content for this day";
+"calendar.schedule" = "Schedule";
+"calendar.hints" = "Hints";
+"calendar.hint1" = "Wednesday without content — add an educational post";
+"calendar.hint2" = "Yesterday's idea can become a carousel";
+"calendar.mode_picker_label" = "Mode";
+"calendar.mode_week" = "Week";
+"calendar.mode_month" = "Month";
+
+/* Content Types */
+"content_type.post" = "Post";
+"content_type.carousel" = "Carousel";
+"content_type.reels" = "Reels/TikTok";
+"content_type.stories" = "Stories";
+"content_type.content_pack" = "Content pack";
+
+/* Content Statuses */
+"content_status.draft" = "Draft";
+"content_status.ready" = "Ready";
+"content_status.scheduled" = "Scheduled";
+"content_status.published" = "Published";
+
+/* Content Tones */
+"content_tone.educational" = "Educational";
+"content_tone.personal" = "Personal";
+"content_tone.sales" = "Sales";
+"content_tone.authority" = "Expert";
+"content_tone.engagement" = "Engaging";
+
+/* Content Goals */
+"content_goal.awareness" = "Awareness";
+"content_goal.trust" = "Trust";
+"content_goal.sales" = "Sales";
+"content_goal.engagement" = "Engagement";
+"content_goal.education" = "Education";
+
+/* User Types */
+"user_type.creator" = "Content creator";
+"user_type.expert" = "Expert / Coach";
+"user_type.small_business" = "Small business";
+"user_type.agency" = "Agency";
+
+/* Visual Moods */
+"visual_mood.minimal" = "Minimalism";
+"visual_mood.bold" = "Bold";
+"visual_mood.editorial" = "Editorial";
+"visual_mood.soft" = "Soft";
+"visual_mood.premium" = "Premium";
+
+/* App Theme */
+"theme.system" = "System";
+"theme.light" = "Light";
+"theme.dark" = "Dark";
+
+"settings.section_appearance" = "Appearance";
+"settings.theme_label" = "Theme";

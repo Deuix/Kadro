@@ -8,11 +8,51 @@
 import Foundation
 import SwiftUI
 
+// MARK: - App Theme
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system = "system"
+    case light  = "light"
+    case dark   = "dark"
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .system: return L10n.Theme.system
+        case .light:  return L10n.Theme.light
+        case .dark:   return L10n.Theme.dark
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .system: return "circle.lefthalf.filled"
+        case .light:  return "sun.max"
+        case .dark:   return "moon.fill"
+        }
+    }
+    
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light:  return .light
+        case .dark:   return .dark
+        }
+    }
+}
+
 @Observable
 final class AppState {
     var hasCompletedOnboarding: Bool {
         didSet {
             UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding")
+        }
+    }
+    
+    var appTheme: AppTheme {
+        didSet {
+            UserDefaults.standard.set(appTheme.rawValue, forKey: "appTheme")
         }
     }
     
@@ -22,6 +62,8 @@ final class AppState {
     
     init() {
         self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        let savedTheme = UserDefaults.standard.string(forKey: "appTheme") ?? AppTheme.system.rawValue
+        self.appTheme = AppTheme(rawValue: savedTheme) ?? .system
     }
     
     func openCreate(
@@ -62,11 +104,11 @@ enum TabItem: Int, CaseIterable, Identifiable {
     
     var title: String {
         switch self {
-        case .home: return "Главная"
-        case .create: return "Создать"
-        case .content: return "Контент"
-        case .calendar: return "Календарь"
-        case .profile: return "Профиль"
+        case .home: return L10n.Tab.home
+        case .create: return L10n.Tab.create
+        case .content: return L10n.Tab.content
+        case .calendar: return L10n.Tab.calendar
+        case .profile: return L10n.Tab.profile
         }
     }
     

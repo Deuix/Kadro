@@ -16,6 +16,7 @@ struct ContentLibraryView: View {
     @State private var selectedFilter: ContentStatus?
     @State private var searchText: String = ""
     @State private var projectToDelete: ContentProject?
+    @Environment(\.colorScheme) private var colorScheme
     
     private var filteredProjects: [ContentProject] {
         var result = allProjects
@@ -40,9 +41,9 @@ struct ContentLibraryView: View {
                 
                 // Custom Large Title Header
                 HStack {
-                    Text("Контент")
+                    Text(L10n.Content.title)
                         .font(.custom("New York", size: 36).weight(.bold))
-                        .foregroundColor(.kadroCharcoal)
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
                     Spacer()
                 }
                 .padding(.horizontal, 24)
@@ -65,7 +66,7 @@ struct ContentLibraryView: View {
                     contentList
                 }
             }
-            .background(Color.kadroIvory)
+            .background(Color.kadroBackground(for: colorScheme))
             .navigationBarHidden(true)
         }
     }
@@ -77,7 +78,7 @@ struct ContentLibraryView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.kadroWarmGray)
             
-            TextField("Поиск", text: $searchText)
+            TextField(L10n.Content.searchPlaceholder, text: $searchText)
                 .font(.kadroBody)
                 .foregroundColor(.kadroCharcoal)
                 .submitLabel(.search)
@@ -94,11 +95,11 @@ struct ContentLibraryView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.kadroSoftWhite)
+        .background(Color.kadroCard(for: colorScheme))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.kadroSand, lineWidth: 0.5)
+                .stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
         )
         .padding(.horizontal, 24)
     }
@@ -114,15 +115,15 @@ struct ContentLibraryView: View {
                         selectedFilter = nil
                     }
                 } label: {
-                    Text("Все")
+                    Text(L10n.Content.filterAll)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(selectedFilter == nil ? .kadroCharcoal : .kadroWarmGray)
+                        .foregroundColor(selectedFilter == nil ? .kadroCharcoal : .kadroSecondary(for: colorScheme))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(selectedFilter == nil ? Color.kadroLime : Color.kadroSoftWhite)
+                        .background(selectedFilter == nil ? Color.kadroLime : Color.kadroCard(for: colorScheme))
                         .clipShape(Capsule())
                         .overlay(
-                            Capsule().stroke(selectedFilter == nil ? Color.clear : Color.kadroSand, lineWidth: 0.5)
+                            Capsule().stroke(selectedFilter == nil ? Color.clear : Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
                         )
                 }
                 
@@ -133,15 +134,15 @@ struct ContentLibraryView: View {
                             selectedFilter = selectedFilter == status ? nil : status
                         }
                     } label: {
-                        Text(status.rawValue)
+                        Text(status.displayName)
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(selectedFilter == status ? .kadroCharcoal : .kadroWarmGray)
+                            .foregroundColor(selectedFilter == status ? .kadroCharcoal : .kadroSecondary(for: colorScheme))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(selectedFilter == status ? Color.kadroLime : Color.kadroSoftWhite)
+                            .background(selectedFilter == status ? Color.kadroLime : Color.kadroCard(for: colorScheme))
                             .clipShape(Capsule())
                             .overlay(
-                                Capsule().stroke(selectedFilter == status ? Color.clear : Color.kadroSand, lineWidth: 0.5)
+                                Capsule().stroke(selectedFilter == status ? Color.clear : Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
                             )
                     }
                 }
@@ -161,7 +162,7 @@ struct ContentLibraryView: View {
                         Button(role: .destructive) {
                             projectToDelete = project
                         } label: {
-                            Label("Удалить", systemImage: "trash")
+                            Label(L10n.Content.deleteSwipe, systemImage: "trash")
                         }
                     }
                     .listRowInsets(EdgeInsets(top: 8, leading: 24, bottom: 8, trailing: 24))
@@ -178,21 +179,21 @@ struct ContentLibraryView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .alert(
-            "Удалить проект?",
+            L10n.Content.deleteConfirmTitle,
             isPresented: Binding(
                 get: { projectToDelete != nil },
                 set: { if !$0 { projectToDelete = nil } }
             ),
             presenting: projectToDelete
         ) { project in
-            Button("Удалить", role: .destructive) {
+            Button(L10n.Content.deleteConfirmAction, role: .destructive) {
                 deleteProject(project)
             }
-            Button("Отмена", role: .cancel) {
+            Button(L10n.Common.cancel, role: .cancel) {
                 projectToDelete = nil
             }
         } message: { project in
-            Text("Проект \"\(project.title.isEmpty ? "Без названия" : project.title)\" будет удалён без возможности восстановления.")
+            Text(L10n.Content.deleteConfirmMessage(projectTitle: project.title.isEmpty ? L10n.Common.untitled : project.title))
         }
     }
     
@@ -205,7 +206,7 @@ struct ContentLibraryView: View {
             VStack(alignment: .leading, spacing: 0) {
                 // Top header of card
                 HStack(alignment: .center) {
-                    Text(project.type.rawValue.uppercased())
+                    Text(project.type.displayName.uppercased())
                         .font(.system(size: 10, weight: .bold, design: .default))
                         .tracking(1.5)
                         .foregroundColor(.kadroWarmGray)
@@ -224,9 +225,9 @@ struct ContentLibraryView: View {
                 // Body of card
                 HStack(alignment: .top, spacing: 16) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(project.title.isEmpty ? "Без названия" : project.title)
+                        Text(project.title.isEmpty ? L10n.Common.untitled : project.title)
                             .font(.custom("New York", size: 20).weight(.medium))
-                            .foregroundColor(.kadroCharcoal)
+                            .foregroundColor(.kadroPrimary(for: colorScheme))
                             .lineLimit(2)
                             .lineSpacing(2)
                         
@@ -250,11 +251,11 @@ struct ContentLibraryView: View {
                 .padding(.bottom, 20)
             }
             .frame(maxWidth: .infinity)
-            .background(Color.kadroSoftWhite)
+            .background(Color.kadroCard(for: colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 0.5)
+                    .stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
             )
         }
         .buttonStyle(.plain)
@@ -280,28 +281,28 @@ struct ContentLibraryView: View {
                         .font(.system(size: 48, weight: .ultraLight))
                         .foregroundColor(.kadroWarmGray)
                     
-                    Text("Библиотека пуста")
+                    Text(L10n.Content.emptyTitle)
                         .font(.custom("New York", size: 24).weight(.medium))
-                        .foregroundColor(.kadroCharcoal)
-                    
-                    Text("Создайте свой первый пост, карусель или сценарий")
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
+
+                    Text(L10n.Content.emptySubtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
-                    
+
                     Button {
                         appState.openCreate()
                     } label: {
-                        Text("Создать контент")
+                        Text(L10n.Content.createContent)
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.kadroCharcoal)
+                            .foregroundColor(.kadroPrimary(for: colorScheme))
                             .padding(.horizontal, 24)
                             .padding(.vertical, 12)
-                            .background(Color.kadroSoftWhite)
+                            .background(Color.kadroCard(for: colorScheme))
                             .clipShape(Capsule())
                             .overlay(
-                                Capsule().stroke(Color.kadroSand, lineWidth: 0.5)
+                                Capsule().stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
                             )
                     }
                     .padding(.top, 8)
@@ -318,11 +319,11 @@ struct ContentLibraryView: View {
                         .font(.system(size: 32, weight: .light))
                         .foregroundColor(.kadroWarmGray)
                     
-                    Text("Ничего не найдено")
+                    Text(L10n.Content.noResultsTitle)
                         .font(.custom("New York", size: 20).weight(.medium))
-                        .foregroundColor(.kadroCharcoal)
-                    
-                    Text("Попробуйте изменить фильтр\nили поисковый запрос")
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
+
+                    Text(L10n.Content.noResultsSubtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                         .multilineTextAlignment(.center)

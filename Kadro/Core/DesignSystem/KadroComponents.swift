@@ -2,7 +2,7 @@
 //  KadroComponents.swift
 //  Kadro
 //
-//  Design System — Reusable UI Components
+//  Design System — Reusable UI Components (dark-mode adaptive)
 //
 
 import SwiftUI
@@ -43,20 +43,21 @@ struct KadroPrimaryButton: View {
 struct KadroSecondaryButton: View {
     let title: String
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.kadroButton)
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .padding(.horizontal, 32)
-                .background(Color.kadroSoftWhite)
+                .background(Color.kadroCard(for: colorScheme))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.kadroSand, lineWidth: 1)
+                        .stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 1)
                 )
         }
     }
@@ -67,6 +68,7 @@ struct KadroSecondaryButton: View {
 struct KadroCard<Content: View>: View {
     var padding: CGFloat = 20
     @ViewBuilder let content: () -> Content
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -74,7 +76,7 @@ struct KadroCard<Content: View>: View {
         }
         .padding(padding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.kadroSoftWhite)
+        .background(Color.kadroCard(for: colorScheme))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
@@ -86,6 +88,7 @@ struct KadroActionCard: View {
     let title: String
     let subtitle: String?
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     init(icon: String, title: String, subtitle: String? = nil, action: @escaping () -> Void) {
         self.icon = icon
@@ -107,12 +110,12 @@ struct KadroActionCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.kadroBodyMedium)
-                        .foregroundColor(.kadroCharcoal)
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
                     
                     if let subtitle {
                         Text(subtitle)
                             .font(.kadroFootnote)
-                            .foregroundColor(.kadroWarmGray)
+                            .foregroundColor(.kadroSecondary(for: colorScheme))
                     }
                 }
                 
@@ -120,10 +123,10 @@ struct KadroActionCard: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.kadroSand)
+                    .foregroundColor(.kadroBorderColor(for: colorScheme))
             }
             .padding(16)
-            .background(Color.kadroSoftWhite)
+            .background(Color.kadroCard(for: colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
@@ -135,6 +138,7 @@ struct KadroQuickActionCard: View {
     let icon: String
     let title: String
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Button(action: action) {
@@ -145,13 +149,13 @@ struct KadroQuickActionCard: View {
                 
                 Text(title)
                     .font(.kadroChip)
-                    .foregroundColor(.kadroCharcoal)
+                    .foregroundColor(.kadroPrimary(for: colorScheme))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 100)
-            .background(Color.kadroSoftWhite)
+            .background(Color.kadroCard(for: colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
@@ -163,19 +167,20 @@ struct KadroChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.kadroChip)
-                .foregroundColor(isSelected ? .kadroCharcoal : .kadroWarmGray)
+                .foregroundColor(isSelected ? .kadroCharcoal : .kadroSecondary(for: colorScheme))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(isSelected ? Color.kadroLime : Color.kadroSoftWhite)
+                .background(isSelected ? Color.kadroLime : Color.kadroCard(for: colorScheme))
                 .clipShape(Capsule())
                 .overlay(
                     Capsule()
-                        .stroke(isSelected ? Color.clear : Color.kadroSand, lineWidth: 1)
+                        .stroke(isSelected ? Color.clear : Color.kadroBorderColor(for: colorScheme), lineWidth: 1)
                 )
         }
     }
@@ -187,12 +192,13 @@ struct KadroSectionHeader: View {
     let title: String
     var action: (() -> Void)? = nil
     var actionTitle: String = "Все"
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         HStack {
             Text(title)
                 .font(.kadroTitle3)
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
             
             Spacer()
             
@@ -200,7 +206,7 @@ struct KadroSectionHeader: View {
                 Button(action: action) {
                     Text(actionTitle)
                         .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
+                        .foregroundColor(.kadroSecondary(for: colorScheme))
                 }
             }
         }
@@ -232,20 +238,21 @@ struct KadroEmptyState: View {
     let subtitle: String
     var buttonTitle: String? = nil
     var action: (() -> Void)? = nil
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 48, weight: .light))
-                .foregroundColor(.kadroSand)
+                .foregroundColor(.kadroBorderColor(for: colorScheme))
             
             Text(title)
                 .font(.kadroTitle3)
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
             
             Text(subtitle)
                 .font(.kadroCallout)
-                .foregroundColor(.kadroWarmGray)
+                .foregroundColor(.kadroSecondary(for: colorScheme))
                 .multilineTextAlignment(.center)
             
             if let buttonTitle, let action {
@@ -281,6 +288,7 @@ struct KadroPreviewableGeneratedImage: View {
     
     @State private var isPreviewPresented = false
     @State private var isDownloading = false
+    @Environment(\.colorScheme) private var colorScheme
     #if canImport(UIKit)
     @State private var shareExportFile: KadroGeneratedImageExportFile?
     #endif
@@ -354,10 +362,10 @@ struct KadroPreviewableGeneratedImage: View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
                 .font(.kadroFootnote)
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(Color.kadroIvory)
+                .background(Color.kadroBackground(for: colorScheme))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .disabled(isDisabled)
@@ -578,6 +586,7 @@ struct KadroDownloadGeneratedImagesButton<Label: View>: View {
 private struct KadroGeneratedImageThumbnail: View {
     let asset: KadroPreviewImageAsset
     let cornerRadius: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         KadroRenderableImage(imageData: asset.imageData)
@@ -585,7 +594,7 @@ private struct KadroGeneratedImageThumbnail: View {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 1)
+                    .stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 1)
             )
     }
 }
@@ -729,7 +738,7 @@ private struct KadroRenderableImage: View {
     
     private var placeholder: some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(Color.kadroSoftWhite)
+            .fill(Color.kadroDarkSurface)
             .overlay(
                 Image(systemName: "photo")
                     .foregroundColor(.kadroWarmGray)
@@ -926,55 +935,77 @@ private struct KadroGeneratedImageShareSheet: UIViewControllerRepresentable {
 }
 #endif
 
+// MARK: - Flow Layout (for hashtags etc.)
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        var height: CGFloat = 0
+        var currentX: CGFloat = 0
+        var currentRowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > maxWidth, currentX > 0 {
+                height += currentRowHeight + spacing
+                currentX = 0
+                currentRowHeight = 0
+            }
+            currentX += size.width + spacing
+            currentRowHeight = max(currentRowHeight, size.height)
+        }
+        height += currentRowHeight
+        return CGSize(width: maxWidth, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var currentX = bounds.minX
+        var currentY = bounds.minY
+        var currentRowHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > bounds.maxX, currentX > bounds.minX {
+                currentY += currentRowHeight + spacing
+                currentX = bounds.minX
+                currentRowHeight = 0
+            }
+            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: ProposedViewSize(size))
+            currentX += size.width + spacing
+            currentRowHeight = max(currentRowHeight, size.height)
+        }
+    }
+}
+
 // MARK: - Previews
 
 #Preview("Components") {
     ScrollView {
         VStack(spacing: 24) {
             KadroPrimaryButton(title: "Создать контент") {}
-            
             KadroSecondaryButton(title: "Отмена") {}
-            
             KadroCard {
-                Text("Заголовок карточки")
-                    .font(.kadroTitle3)
-                Text("Описание")
-                    .font(.kadroCallout)
-                    .foregroundColor(.kadroWarmGray)
+                Text("Заголовок карточки").font(.kadroTitle3)
+                Text("Описание").font(.kadroCallout).foregroundColor(.kadroWarmGray)
             }
-            
-            KadroActionCard(
-                icon: "doc.text",
-                title: "Instagram Пост",
-                subtitle: "Текст с хуком и CTA"
-            ) {}
-            
+            KadroActionCard(icon: "doc.text", title: "Instagram Пост", subtitle: "Текст с хуком и CTA") {}
             HStack(spacing: 12) {
                 KadroQuickActionCard(icon: "text.quote", title: "Пост") {}
                 KadroQuickActionCard(icon: "rectangle.split.3x1", title: "Карусель") {}
                 KadroQuickActionCard(icon: "video", title: "Reels") {}
             }
-            
             HStack(spacing: 8) {
                 KadroChip(title: "Обучающий", isSelected: true) {}
                 KadroChip(title: "Личный", isSelected: false) {}
-                KadroChip(title: "Продающий", isSelected: false) {}
             }
-            
             KadroSectionHeader(title: "Последние черновики") {}
-            
             HStack(spacing: 8) {
                 KadroStatusBadge(title: "Черновик", color: .kadroWarmGray)
                 KadroStatusBadge(title: "Готово", color: .kadroSuccess)
-                KadroStatusBadge(title: "Запланировано", color: .kadroLime)
             }
-            
-            KadroEmptyState(
-                icon: "doc.text.magnifyingglass",
-                title: "Пока пусто",
-                subtitle: "Ваши черновики появятся здесь",
-                buttonTitle: "Создать первый"
-            ) {}
+            KadroEmptyState(icon: "doc.text.magnifyingglass", title: "Пока пусто", subtitle: "Ваши черновики появятся здесь", buttonTitle: "Создать первый") {}
         }
         .padding()
     }

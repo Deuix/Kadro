@@ -58,6 +58,7 @@ struct KadroGenerationContext {
     let tone: ContentTone?
     let goal: ContentGoal?
     let platform: ContentPlatform
+    let contentLanguage: String
     let formatDetail: String?
     let preferredImageAspectRatio: String?
     let desiredSlideCount: Int?
@@ -71,6 +72,7 @@ struct KadroGenerationRequest: Encodable {
     let tone: String
     let goal: String
     let platform: String
+    let contentLanguage: String
     let formatDetail: String
     let preferredImageAspectRatio: String
     let desiredSlideCount: Int
@@ -185,6 +187,7 @@ extension ContentProject {
         
         project.tone = context.tone
         project.goal = context.goal
+        project.contentLanguage = context.contentLanguage
         project.formatDetail = context.formatDetail
         project.preferredImageAspectRatio = context.preferredImageAspectRatio
         project.desiredSlideCount = context.desiredSlideCount

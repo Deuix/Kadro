@@ -36,10 +36,8 @@ private extension KadroStyleVisualTarget {
     
     var useButtonTitle: String {
         switch self {
-        case .cover:
-            return "Использовать как cover"
-        case .slide:
-            return "Использовать для слайда"
+        case .cover: return L10n.Generated.useAsCover
+        case .slide: return L10n.Generated.useForSlide
         }
     }
 }
@@ -71,10 +69,11 @@ struct ContentProjectDetailView: View {
     @State private var generatedVisualPreview: PendingGeneratedVisualPreview?
     @State private var visualPromptRequest: DetailVisualPromptRequest?
     @State private var visualPromptText: String = ""
-    @State private var visualLoadingTitle: String = "Генерируем визуал"
-    @State private var visualLoadingSubtitle: String = "Собираем reference-guided image generation prompt на основе style pack и ваших референсов."
+    @State private var visualLoadingTitle: String = ""
+    @State private var visualLoadingSubtitle: String = ""
     @State private var textEditRequest: TextEditRequest?
     @State private var copiedFieldID: EditableTextField?
+    @Environment(\.colorScheme) private var colorScheme
     
     private let aiService = KadroAIService()
     private let styleImageService = KadroStyleImageService()
@@ -113,57 +112,57 @@ struct ContentProjectDetailView: View {
                 if isInstagramPost {
                     visualGenerationCard
                     if let mainText = project.mainText, !mainText.isEmpty {
-                        textSection(title: "Текст поста", body: mainText, field: .mainText)
+                        textSection(title: L10n.Generated.postMainText, body: mainText, field: .mainText)
                     }
                     if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
-                        textSection(title: "Короткая версия", body: shortVersion, field: .shortVersion)
+                        textSection(title: L10n.Generated.shortVersion, body: shortVersion, field: .shortVersion)
                     }
                 } else {
                     heroCard
                     visualGenerationCard
-                    
+
                     if !project.rawInput.isEmpty {
-                        textSection(title: "Исходная идея", body: project.rawInput, field: .rawInput)
+                        textSection(title: L10n.Generated.sourceIdea, body: project.rawInput, field: .rawInput)
                     }
-                    
+
                     if let hook = project.hook, !hook.isEmpty {
-                        textSection(title: "Хук", body: hook, field: .hook)
+                        textSection(title: L10n.Generated.hook, body: hook, field: .hook)
                     }
-                    
+
                     if let mainText = project.mainText, !mainText.isEmpty {
-                        textSection(title: project.type == .stories ? "Stories draft" : "Основной текст", body: mainText, field: .mainText)
+                        textSection(title: project.type == .stories ? L10n.Generated.storiesDraft : L10n.Generated.mainText, body: mainText, field: .mainText)
                     }
-                    
+
                     if let cta = project.cta, !cta.isEmpty {
-                        textSection(title: "CTA", body: cta, field: .cta)
+                        textSection(title: L10n.Generated.cta, body: cta, field: .cta)
                     }
-                    
+
                     if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
-                        textSection(title: "Короткая версия", body: shortVersion, field: .shortVersion)
+                        textSection(title: L10n.Generated.shortVersion, body: shortVersion, field: .shortVersion)
                     }
-                    
+
                     if let caption = project.caption, !caption.isEmpty {
-                        textSection(title: "Подпись", body: caption, field: .caption)
+                        textSection(title: L10n.Generated.caption, body: caption, field: .caption)
                     }
-                    
+
                     if let hashtags = project.hashtags, !hashtags.isEmpty {
                         hashtagsSection(hashtags)
                     }
-                    
+
                     if !sortedSlides.isEmpty {
                         slidesSection(sortedSlides)
                     }
-                    
+
                     if let scriptBeats = project.scriptBeats, !scriptBeats.isEmpty {
-                        textSection(title: "Сценарные биты", body: scriptBeats, field: .scriptBeats)
+                        textSection(title: L10n.Generated.scriptBeats, body: scriptBeats, field: .scriptBeats)
                     }
-                    
+
                     if let onScreenText = project.onScreenText, !onScreenText.isEmpty {
-                        textSection(title: "Текст на экране", body: onScreenText, field: .onScreenText)
+                        textSection(title: L10n.Generated.onScreenText, body: onScreenText, field: .onScreenText)
                     }
-                    
+
                     if let coverIdea = project.coverIdea, !coverIdea.isEmpty {
-                        textSection(title: "Идея обложки", body: coverIdea, field: .coverIdea)
+                        textSection(title: L10n.Generated.coverIdea, body: coverIdea, field: .coverIdea)
                     }
                 }
             }
@@ -171,12 +170,12 @@ struct ContentProjectDetailView: View {
             .padding(.top, 12)
             .padding(.bottom, 32)
         }
-        .background(Color.kadroIvory)
-        .navigationTitle(project.title.isEmpty ? "Без названия" : project.title)
+        .background(Color.kadroBackground(for: colorScheme))
+        .navigationTitle(project.title.isEmpty ? L10n.Common.untitled : project.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Новая версия") {
+                Button(L10n.Generated.newVersion) {
                     Task {
                         await regenerateProject()
                     }
@@ -205,18 +204,18 @@ struct ContentProjectDetailView: View {
             }
         }
         .alert(
-            "Что-то пошло не так",
+            L10n.Common.errorTitle,
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
             ),
             actions: {
-                Button("Ок", role: .cancel) {
+                Button(L10n.Common.ok, role: .cancel) {
                     errorMessage = nil
                 }
             },
             message: {
-                Text(errorMessage ?? "Попробуйте ещё раз.")
+                Text(errorMessage ?? L10n.Common.errorMessage)
             }
         )
         .sheet(item: $textEditRequest) { request in
@@ -238,12 +237,12 @@ struct ContentProjectDetailView: View {
         KadroCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    KadroStatusBadge(title: project.type.rawValue, color: .kadroLime)
-                    KadroStatusBadge(title: project.status.rawValue, color: statusColor(for: project.status))
+                    KadroStatusBadge(title: project.type.displayName, color: .kadroLime)
+                    KadroStatusBadge(title: project.status.displayName, color: statusColor(for: project.status))
                     Spacer()
                 }
                 
-                Text(project.title.isEmpty ? "Без названия" : project.title)
+                Text(project.title.isEmpty ? L10n.Common.untitled : project.title)
                     .font(.kadroTitle2)
                     .foregroundColor(.kadroCharcoal)
                 
@@ -253,13 +252,13 @@ struct ContentProjectDetailView: View {
                         .foregroundColor(.kadroWarmGray)
                     
                     if let tone = project.tone {
-                        Text("· \(tone.rawValue)")
+                        Text("· \(tone.displayName)")
                             .font(.kadroFootnote)
                             .foregroundColor(.kadroWarmGray)
                     }
-                    
+
                     if let goal = project.goal {
-                        Text("· \(goal.rawValue)")
+                        Text("· \(goal.displayName)")
                             .font(.kadroFootnote)
                             .foregroundColor(.kadroWarmGray)
                     }
@@ -275,18 +274,18 @@ struct ContentProjectDetailView: View {
     private var visualGenerationCard: some View {
         KadroCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text(isInstagramPost ? "Изображение поста" : "Visual draft")
+                Text(isInstagramPost ? L10n.Generated.visualSectionPost : L10n.Generated.visualDraft)
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
                 
                 if let selectedStylePack {
-                    Text("Style pack: \(selectedStylePack.displayName)")
+                    Text(L10n.Generated.stylePackLabel(selectedStylePack.displayName))
                         .font(.kadroBodyMedium)
                         .foregroundColor(.kadroCharcoal)
                     Text(selectedStylePack.shortDescription)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
-                    Text("References found: \(selectedStylePackReferenceCount)")
+                    Text(L10n.Generated.referencesFound(selectedStylePackReferenceCount))
                         .font(.kadroFootnote)
                         .foregroundColor(.kadroWarmGray)
                     Text(selectedStylePack.referenceFolder)
@@ -320,7 +319,7 @@ struct ContentProjectDetailView: View {
                     .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
                     .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.55 : 1)
                 } else {
-                    Text("Сначала выберите style pack во время создания поста, чтобы мы могли использовать ваши references для visual generation.")
+                    Text(L10n.Generated.detailNoStylePack)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                 }
@@ -337,10 +336,10 @@ struct ContentProjectDetailView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .tint(.kadroCharcoal)
-                    Text(isGeneratingVisual ? visualLoadingTitle : "Генерируем новую версию")
+                    Text(isGeneratingVisual ? visualLoadingTitle : L10n.Generated.regeneratingTitle)
                         .font(.kadroTitle3)
                         .foregroundColor(.kadroCharcoal)
-                    Text(isGeneratingVisual ? visualLoadingSubtitle : "Создаем новый вариант на основе той же идеи и текущих настроек формата.")
+                    Text(isGeneratingVisual ? visualLoadingSubtitle : L10n.Generated.regeneratingSubtitle)
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                         .multilineTextAlignment(.center)
@@ -354,7 +353,7 @@ struct ContentProjectDetailView: View {
     
     private func hashtagsSection(_ hashtags: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            KadroSectionHeader(title: "Хэштеги")
+            KadroSectionHeader(title: L10n.Generated.hashtags)
             FlowLayout(spacing: 8) {
                 ForEach(hashtags.split(separator: " ").map(String.init), id: \.self) { hashtag in
                     KadroChip(title: hashtag, isSelected: false) {}
@@ -367,18 +366,18 @@ struct ContentProjectDetailView: View {
     private func slidesSection(_ slides: [CarouselSlide]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Слайды карусели")
+                Text(L10n.Generated.carouselSlides)
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
                 Spacer()
                 if !generatedSlidePreviewAssets.isEmpty {
                     KadroDownloadGeneratedImagesButton(assets: generatedSlidePreviewAssets, isDisabled: isGeneratingVisual) { isDownloading in
-                        Text(isDownloading ? "Сохраняем..." : "Скачать все")
+                        Text(isDownloading ? L10n.Generated.downloading : L10n.Generated.downloadAll)
                             .font(.kadroFootnote)
                             .foregroundColor(.kadroLime)
                     }
                 }
-                Button("Все visuals") {
+                Button(L10n.Generated.allVisuals) {
                     Task {
                         await generateAllSlideVisuals()
                     }
@@ -392,7 +391,7 @@ struct ContentProjectDetailView: View {
                 ForEach(slides) { slide in
                     KadroCard {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Слайд \(slide.order)")
+                            Text(L10n.Generated.slideFormat(slide.order))
                                 .font(.kadroCaption)
                                 .foregroundColor(.kadroWarmGray)
                             Text(slide.headline)
@@ -422,15 +421,15 @@ struct ContentProjectDetailView: View {
                                 visualPromptText = slide.generatedImagePrompt ?? ""
                                 visualPromptRequest = DetailVisualPromptRequest(
                                     target: .slide(slide.id),
-                                    title: slide.generatedImageData == nil ? "Создать visual для слайда" : "Перегенерировать visual"
+                                    title: slide.generatedImageData == nil ? L10n.Generated.createSlideVisual : L10n.Generated.regenerateSlideVisual
                                 )
                             } label: {
-                                Text(slide.generatedImageData == nil ? "Создать visual для слайда" : "Перегенерировать visual")
+                                Text(slide.generatedImageData == nil ? L10n.Generated.createSlideVisual : L10n.Generated.regenerateSlideVisual)
                                     .font(.kadroFootnote)
                                     .foregroundColor(.kadroCharcoal)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(Color.kadroIvory)
+                                    .background(Color.kadroBackground(for: colorScheme))
                                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
@@ -466,7 +465,7 @@ struct ContentProjectDetailView: View {
                         Image(systemName: copiedFieldID == field ? "checkmark" : "doc.on.doc")
                             .font(.system(size: 12, weight: .medium))
                         if copiedFieldID == field {
-                            Text("Скопировано")
+                            Text(L10n.Generated.copied)
                                 .font(.kadroCaption)
                         }
                     }
@@ -510,9 +509,9 @@ struct ContentProjectDetailView: View {
     
     private var coverButtonTitle: String {
         if isInstagramPost {
-            return project.generatedCoverImageData == nil ? "Создать изображение" : "Перегенерировать изображение"
+            return project.generatedCoverImageData == nil ? L10n.Generated.createCoverImage : L10n.Generated.regenerateCoverImage
         }
-        return project.generatedCoverImageData == nil ? "Создать visual cover" : "Перегенерировать cover"
+        return project.generatedCoverImageData == nil ? L10n.Generated.createCover : L10n.Generated.regenerateCover
     }
     
     private func slideMetaText(_ slide: CarouselSlide) -> String? {
@@ -566,20 +565,21 @@ struct ContentProjectDetailView: View {
         guard !isRegenerating else { return }
         let trimmedInput = project.rawInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInput.isEmpty else {
-            errorMessage = "У проекта нет исходной идеи для повторной генерации."
+            errorMessage = L10n.Generated.noSourceIdea
             return
         }
-        
+
         isRegenerating = true
         errorMessage = nil
-        
+
         let context = KadroGenerationContext(
-            inputSource: "Повторная генерация",
+            inputSource: "Regeneration",
             rawInput: trimmedInput,
             outputType: project.type,
             tone: project.tone,
             goal: project.goal,
             platform: project.platform,
+            contentLanguage: project.contentLanguage ?? profiles.first?.language ?? "Русский",
             formatDetail: project.formatDetail,
             preferredImageAspectRatio: project.preferredImageAspectRatio,
             desiredSlideCount: project.desiredSlideCount,
@@ -615,8 +615,8 @@ struct ContentProjectDetailView: View {
         guard !isGeneratingVisual else { return }
         isGeneratingVisual = true
         errorMessage = nil
-        visualLoadingTitle = "Генерируем cover"
-        visualLoadingSubtitle = "Собираем reference-guided prompt для visual cover на основе style pack и ваших референсов."
+        visualLoadingTitle = L10n.Generated.loadingCoverTitle
+        visualLoadingSubtitle = L10n.Generated.loadingCoverSubtitle
         
         do {
             let response = try await styleImageService.generateCoverVisual(project: project, brandProfile: brandProfile, promptOverride: promptOverride)
@@ -633,8 +633,8 @@ struct ContentProjectDetailView: View {
         guard !isGeneratingVisual else { return }
         isGeneratingVisual = true
         errorMessage = nil
-        visualLoadingTitle = "Генерируем visual для слайда"
-        visualLoadingSubtitle = "Слайд \(slide.order): формируем visual по headline/body и выбранному style pack."
+        visualLoadingTitle = L10n.Generated.loadingSlideTitle
+        visualLoadingSubtitle = L10n.Generated.loadingSlideSubtitle(slide.order)
         
         do {
             let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile, promptOverride: promptOverride)
@@ -656,14 +656,14 @@ struct ContentProjectDetailView: View {
         errorMessage = nil
         
         for (index, slide) in slides.enumerated() {
-            visualLoadingTitle = "Генерируем visuals для карусели"
-            visualLoadingSubtitle = "Слайд \(index + 1) из \(slides.count): \(slide.headline)"
-            
+            visualLoadingTitle = L10n.Generated.loadingAllSlidesTitle
+            visualLoadingSubtitle = L10n.Generated.loadingAllSlidesSubtitle(index + 1, slides.count, slide.headline)
+
             do {
                 let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile)
                 try persistGeneratedVisual(response, target: .slide(slide.id))
             } catch {
-                errorMessage = "Ошибка на слайде \(slide.order): \(error.localizedDescription)"
+                errorMessage = L10n.Generated.slideError(slide.order, error.localizedDescription)
                 break
             }
         }
@@ -683,9 +683,9 @@ struct ContentProjectDetailView: View {
     @MainActor
     private func persistGeneratedVisual(_ result: KadroGeneratedStyleImageResponse, target: KadroStyleVisualTarget) throws {
         guard let imageData = styleImageService.imageData(from: result.imageDataURL) else {
-            throw NSError(domain: "KadroStyleImageService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Не удалось сохранить сгенерированный визуал."])
+            throw NSError(domain: "KadroStyleImageService", code: 1, userInfo: [NSLocalizedDescriptionKey: L10n.Generated.saveVisualError])
         }
-        
+
         switch target {
         case .cover:
             project.generatedCoverImageData = imageData
@@ -697,7 +697,7 @@ struct ContentProjectDetailView: View {
             project.generatedCoverImageUpdatedAt = Date()
         case .slide(let slideID):
             guard let slide = project.slides?.first(where: { $0.id == slideID }) else {
-                throw NSError(domain: "KadroStyleImageService", code: 2, userInfo: [NSLocalizedDescriptionKey: "Не удалось найти слайд для сохранения визуала."])
+                throw NSError(domain: "KadroStyleImageService", code: 2, userInfo: [NSLocalizedDescriptionKey: L10n.Generated.findSlideError])
             }
             slide.generatedImageData = imageData
             slide.generatedImagePrompt = result.promptUsed
@@ -727,7 +727,7 @@ struct ContentProjectDetailView: View {
         guard let data = slide.generatedImageData else { return nil }
         return KadroPreviewImageAsset(
             id: "project-slide-\(slide.id.uuidString)",
-            title: "Слайд \(slide.order)",
+            title: L10n.Generated.slideFormat(slide.order),
             subtitle: slideMetaText(slide),
             filenameStem: "kadro-\(project.title.isEmpty ? "carousel" : project.title)-slide-\(slide.order)",
             imageData: data
