@@ -230,6 +230,16 @@ struct GeneratedContentView: View {
                 Text("Candidate: \(result.payload.metadata.candidateModel)")
                     .font(.kadroCaption)
                     .foregroundColor(.kadroWarmGray)
+                if result.payload.metadata.fallbackUsed == true {
+                    Text("Fallback: активирован")
+                        .font(.kadroCaption)
+                        .foregroundColor(.kadroWarning)
+                    if let reason = result.payload.metadata.fallbackReason, !reason.isEmpty {
+                        Text(reason)
+                            .font(.kadroCaption)
+                            .foregroundColor(.kadroWarmGray)
+                    }
+                }
             }
         }
     }

@@ -121,6 +121,8 @@ struct KadroGenerationMetadata: Decodable {
     let candidateModel: String
     let openrouterRequestId: String
     let promptVersion: String
+    let fallbackUsed: Bool?
+    let fallbackReason: String?
 }
 
 struct GeneratedContentResult: Identifiable {

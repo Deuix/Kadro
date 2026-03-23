@@ -13,7 +13,7 @@ const OPENROUTER_IMAGE_MODEL = Deno.env.get('OPENROUTER_IMAGE_MODEL') ?? 'google
 const OPENROUTER_CANDIDATE_MODEL = Deno.env.get('OPENROUTER_CANDIDATE_MODEL') ?? 'bytedance/seed-2.0-lite'
 const OPENROUTER_APP_URL = Deno.env.get('OPENROUTER_APP_URL') ?? 'https://kadro.app'
 const OPENROUTER_APP_NAME = Deno.env.get('OPENROUTER_APP_NAME') ?? 'Kadro'
-const PROMPT_VERSION = 'sprint4-v1'
+const PROMPT_VERSION = 'sprint4-v2'
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -58,6 +58,13 @@ type OpenRouterResponse = {
       content?: string | Array<{ type?: string; text?: string }>
     }
   }>
+}
+
+type GenerationAttempt = {
+  response: OpenRouterResponse
+  generated: Record<string, unknown>
+  fallbackUsed: boolean
+  fallbackReason: string
 }
 
 const contentSchema = {
@@ -239,18 +246,18 @@ Deno.serve(async (req) => {
   const logId = insertedLog?.id
 
   try {
-    const openRouterResponse = await callOpenRouter(requestPayload)
-    const generated = extractStructuredContent(openRouterResponse)
-
+    const attempt = await generateWithFallback(requestPayload)
     const responsePayload = {
-      ...generated,
+      ...attempt.generated,
       metadata: {
-        text_model: openRouterResponse.model ?? OPENROUTER_TEXT_MODEL,
+        text_model: attempt.response.model ?? OPENROUTER_TEXT_MODEL,
         cheap_model: OPENROUTER_CHEAP_MODEL,
         image_model: OPENROUTER_IMAGE_MODEL,
         candidate_model: OPENROUTER_CANDIDATE_MODEL,
-        openrouter_request_id: openRouterResponse.id ?? '',
+        openrouter_request_id: attempt.response.id ?? '',
         prompt_version: PROMPT_VERSION,
+        fallback_used: attempt.fallbackUsed,
+        fallback_reason: attempt.fallbackReason,
       },
     }
 
@@ -259,9 +266,11 @@ Deno.serve(async (req) => {
         .from('ai_generation_logs')
         .update({
           status: 'success',
-          model_used: openRouterResponse.model ?? OPENROUTER_TEXT_MODEL,
-          openrouter_request_id: openRouterResponse.id ?? null,
+          model_used: attempt.response.model ?? OPENROUTER_TEXT_MODEL,
+          openrouter_request_id: attempt.response.id ?? null,
           response_payload: responsePayload,
+          fallback_used: attempt.fallbackUsed,
+          fallback_reason: attempt.fallbackReason || null,
         })
         .eq('id', logId)
     }
@@ -284,7 +293,40 @@ Deno.serve(async (req) => {
   }
 })
 
-async function callOpenRouter(payload: Record<string, unknown>): Promise<OpenRouterResponse> {
+async function generateWithFallback(payload: Record<string, unknown>): Promise<GenerationAttempt> {
+  try {
+    const response = await callOpenRouter(OPENROUTER_TEXT_MODEL, payload)
+    const generated = extractStructuredContent(response)
+    return {
+      response,
+      generated,
+      fallbackUsed: false,
+      fallbackReason: '',
+    }
+  } catch (primaryError) {
+    const primaryMessage = primaryError instanceof Error ? primaryError.message : 'Primary generation failed.'
+
+    if (!OPENROUTER_CANDIDATE_MODEL || OPENROUTER_CANDIDATE_MODEL === OPENROUTER_TEXT_MODEL) {
+      throw new Error(primaryMessage)
+    }
+
+    try {
+      const response = await callOpenRouter(OPENROUTER_CANDIDATE_MODEL, payload)
+      const generated = extractStructuredContent(response)
+      return {
+        response,
+        generated,
+        fallbackUsed: true,
+        fallbackReason: `Primary model fallback: ${primaryMessage}`,
+      }
+    } catch (candidateError) {
+      const candidateMessage = candidateError instanceof Error ? candidateError.message : 'Candidate generation failed.'
+      throw new Error(`Primary failed: ${primaryMessage} | Candidate failed: ${candidateMessage}`)
+    }
+  }
+}
+
+async function callOpenRouter(model: string, payload: Record<string, unknown>): Promise<OpenRouterResponse> {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -294,7 +336,7 @@ async function callOpenRouter(payload: Record<string, unknown>): Promise<OpenRou
       'X-Title': OPENROUTER_APP_NAME,
     },
     body: JSON.stringify({
-      model: OPENROUTER_TEXT_MODEL,
+      model,
       temperature: 0.7,
       max_tokens: 2200,
       response_format: {
@@ -344,7 +386,7 @@ function extractStructuredContent(response: OpenRouterResponse) {
   }
 
   try {
-    return JSON.parse(rawText)
+    return JSON.parse(rawText) as Record<string, unknown>
   } catch {
     throw new Error('Structured JSON parsing failed.')
   }
