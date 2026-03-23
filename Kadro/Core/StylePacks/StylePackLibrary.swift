@@ -11,11 +11,17 @@ enum StylePackLibrary {
     private static func loadPacks() -> [StylePack] {
         let decoder = JSONDecoder()
         
-        if let url = Bundle.main.url(forResource: "style_packs", withExtension: "json", subdirectory: "Resources/StylePacks"),
-           let data = try? Data(contentsOf: url),
-           let decoded = try? decoder.decode([StylePack].self, from: data),
-           !decoded.isEmpty {
-            return decoded
+        let candidateURLs = [
+            Bundle.main.url(forResource: "style_packs", withExtension: "json"),
+            Bundle.main.url(forResource: "style_packs", withExtension: "json", subdirectory: "Resources/StylePacks")
+        ]
+        
+        for url in candidateURLs.compactMap({ $0 }) {
+            if let data = try? Data(contentsOf: url),
+               let decoded = try? decoder.decode([StylePack].self, from: data),
+               !decoded.isEmpty {
+                return decoded
+            }
         }
         
         return fallbackPacks
@@ -31,7 +37,7 @@ enum StylePackLibrary {
             defaultVisualMoodKey: "minimal",
             promptTemplate: "Use generous whitespace, restrained palette, clean typography, one clear focal block, and disciplined layout rhythm.",
             negativePrompt: "No clutter, no neon gradients, no generic AI glow, no sticker overload.",
-            referenceFolder: "Resources/StylePacks/minimalistic/references",
+            referenceFolder: "Kadro/Resources/StylePacks/minimalistic",
             recommendedUse: ["carousel", "stories", "content_pack"],
             accentPalette: ["ivory", "charcoal", "lime"],
             referenceNotes: ["Keep text short on covers", "Prefer one dominant block per slide"]
@@ -45,7 +51,7 @@ enum StylePackLibrary {
             defaultVisualMoodKey: "premium",
             promptTemplate: "Use refined typography, soft luxury spacing, premium restraint, subtle contrast, and polished editorial balance.",
             negativePrompt: "No cheap glam, no loud gradients, no aggressive effects, no noisy textures.",
-            referenceFolder: "Resources/StylePacks/elegant/references",
+            referenceFolder: "Kadro/Resources/StylePacks/elegant",
             recommendedUse: ["carousel", "cover", "brand_posts"],
             accentPalette: ["bone", "espresso", "muted gold"],
             referenceNotes: ["Focus on hierarchy and calm contrast", "Avoid overdesigned decorative elements"]
@@ -59,10 +65,38 @@ enum StylePackLibrary {
             defaultVisualMoodKey: "dark",
             promptTemplate: "Use dark premium surfaces, high-contrast typography, subtle glow or grain, and a strong focal center.",
             negativePrompt: "No gamer neon overload, no chaotic shadows, no low-legibility compositions.",
-            referenceFolder: "Resources/StylePacks/dark/references",
+            referenceFolder: "Kadro/Resources/StylePacks/dark",
             recommendedUse: ["reels_cover", "carousel", "launch_assets"],
             accentPalette: ["black", "graphite", "acid lime"],
             referenceNotes: ["Protect readability first", "Use glow very sparingly"]
+        ),
+        StylePack(
+            id: "modern",
+            name: "Modern",
+            russianName: "Современный",
+            shortDescription: "Современный clean look с crisp hierarchy, polished accents и mobile-native feel.",
+            moodDescription: "modern, polished, dynamic",
+            defaultVisualMoodKey: "editorial",
+            promptTemplate: "Use modern editorial hierarchy, crisp spacing, refined contrast, mobile-native composition, and a fresh App Store-ready feel.",
+            negativePrompt: "No dated gradients, no clutter, no generic startup clichés, no cheap stock look.",
+            referenceFolder: "Kadro/Resources/StylePacks/modern",
+            recommendedUse: ["carousel", "reels_cover", "launch_assets"],
+            accentPalette: ["white", "charcoal", "electric lime"],
+            referenceNotes: ["Keep layouts sharp and current", "Prefer clear hierarchy over decoration"]
+        ),
+        StylePack(
+            id: "texty",
+            name: "Texty",
+            russianName: "Текстовый",
+            shortDescription: "Text-led стиль для mostly text posts и carousel slides с очень сильной типографикой.",
+            moodDescription: "typographic, clear, content-first",
+            defaultVisualMoodKey: "minimal",
+            promptTemplate: "Use text-led composition, strong typographic hierarchy, generous margins, minimal decoration, and extremely high readability.",
+            negativePrompt: "No image-heavy layouts, no low-contrast text, no tiny copy, no decorative clutter.",
+            referenceFolder: "Kadro/Resources/StylePacks/texty",
+            recommendedUse: ["carousel", "text_posts", "quote_cards"],
+            accentPalette: ["ivory", "charcoal", "soft gray"],
+            referenceNotes: ["Text must dominate the layout", "Optimize for fast reading on mobile"]
         )
     ]
 }

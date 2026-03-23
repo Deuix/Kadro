@@ -354,6 +354,8 @@ struct BrandView: View {
         case "minimalistic": return .kadroSoftWhite
         case "elegant": return Color(red: 234/255, green: 226/255, blue: 210/255)
         case "dark": return .kadroCharcoal
+        case "modern": return Color(red: 223/255, green: 230/255, blue: 236/255)
+        case "texty": return Color(red: 247/255, green: 244/255, blue: 237/255)
         default: return .kadroSand
         }
     }
