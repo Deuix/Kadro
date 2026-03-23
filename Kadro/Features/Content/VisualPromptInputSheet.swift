@@ -9,7 +9,7 @@ struct VisualPromptInputSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 16) {
-                Text("Можно оставить поле пустым для стандартной генерации или добавить уточнение для новой версии визуала.")
+                Text(L10n.Common.visualPromptHint)
                     .font(.kadroCallout)
                     .foregroundColor(.kadroWarmGray)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -24,10 +24,10 @@ struct VisualPromptInputSheet: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 
                 HStack(spacing: 12) {
-                    KadroSecondaryButton(title: "Отмена") {
+                    KadroSecondaryButton(title: L10n.Common.cancel) {
                         dismiss()
                     }
-                    KadroPrimaryButton(title: "Генерировать") {
+                    KadroPrimaryButton(title: L10n.Common.generate) {
                         onSubmit()
                         dismiss()
                     }

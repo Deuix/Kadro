@@ -32,8 +32,12 @@ enum L10n {
         static var create: String         { L10n.s("common.create") }
         static var continueAction: String { L10n.s("common.continue") }
         static var next: String           { L10n.s("common.next") }
-        static var errorTitle: String     { L10n.s("common.error_title") }
-        static var errorMessage: String   { L10n.s("common.error_message") }
+        static var errorTitle: String       { L10n.s("common.error_title") }
+        static var errorMessage: String     { L10n.s("common.error_message") }
+        static var generate: String              { L10n.s("common.generate") }
+        static var visualPromptHint: String      { L10n.s("common.visual_prompt_hint") }
+        static var microphonePermission: String  { L10n.s("common.microphone_permission") }
+        static var recordingFailed: String       { L10n.s("common.recording_failed") }
     }
 
     // MARK: Tabs
@@ -103,6 +107,40 @@ enum L10n {
         static var resetAction: String          { L10n.s("settings.reset_action") }
         static var sectionAppearance: String    { L10n.s("settings.section_appearance") }
         static var themeLabel: String           { L10n.s("settings.theme_label") }
+        static var editProfile: String          { L10n.s("settings.edit_profile") }
+        static func worksCount(_ n: Int) -> String { String(format: L10n.s("settings.works_count"), n) }
+        static var statProjects: String         { L10n.s("settings.stat_projects") }
+        static var statProjectsSubtitle: String { L10n.s("settings.stat_projects_subtitle") }
+        static var statReady: String            { L10n.s("settings.stat_ready") }
+        static var statReadySubtitle: String    { L10n.s("settings.stat_ready_subtitle") }
+        static var statPublished: String        { L10n.s("settings.stat_published") }
+        static var statPublishedSubtitle: String { L10n.s("settings.stat_published_subtitle") }
+        static var quickNewTask: String         { L10n.s("settings.quick_new_task") }
+        static var quickGenerate: String        { L10n.s("settings.quick_generate") }
+        static var quickIdeas: String           { L10n.s("settings.quick_ideas") }
+        static var quickLibrary: String         { L10n.s("settings.quick_library") }
+        static var pushNotifications: String    { L10n.s("settings.push_notifications") }
+        static var notificationEnabled: String  { L10n.s("settings.notification_enabled") }
+        static var notificationDenied: String   { L10n.s("settings.notification_denied") }
+        static var notificationProvisional: String { L10n.s("settings.notification_provisional") }
+        static var notificationTap: String      { L10n.s("settings.notification_tap") }
+        static var appLanguage: String          { L10n.s("settings.app_language") }
+        static var helpFaqSubtitle: String      { L10n.s("settings.help_faq_subtitle") }
+        static var privacySubtitle: String      { L10n.s("settings.privacy_subtitle") }
+        static var termsSubtitle: String        { L10n.s("settings.terms_subtitle") }
+        static var rateAppSubtitle: String      { L10n.s("settings.rate_app_subtitle") }
+        static var shareApp: String             { L10n.s("settings.share_app") }
+        static var shareAppSubtitle: String     { L10n.s("settings.share_app_subtitle") }
+        static var deleteAllTitle: String       { L10n.s("settings.delete_all_title") }
+        static var deleteAllSubtitle: String    { L10n.s("settings.delete_all_subtitle") }
+        static var deleteConfirmTitle: String   { L10n.s("settings.delete_confirm_title") }
+        static var deleteConfirmAction: String  { L10n.s("settings.delete_confirm_action") }
+        static var deleteConfirmMessage: String { L10n.s("settings.delete_confirm_message") }
+        static var resetOnboardingSubtitle: String { L10n.s("settings.reset_onboarding_subtitle") }
+        static func versionLabel(_ v: String) -> String { String(format: L10n.s("settings.version_label"), v) }
+        static var madeWithLove: String         { L10n.s("settings.made_with_love") }
+        static var languageInfo: String         { L10n.s("settings.language_info") }
+        static var openIOSSettings: String      { L10n.s("settings.open_ios_settings") }
     }
 
     // MARK: Onboarding
@@ -226,6 +264,8 @@ enum L10n {
         static var voiceStop: String              { L10n.s("create.voice_stop") }
         static var voiceRecord: String            { L10n.s("create.voice_record") }
         static var voiceTranscribing: String      { L10n.s("create.voice_transcribing") }
+        static var voiceListening: String         { L10n.s("create.voice_listening") }
+        static var voiceFallbackModel: String     { L10n.s("create.voice_fallback_model") }
         static func voiceRecognized(_ model: String) -> String { String(format: L10n.s("create.voice_recognized"), model) }
         static var voiceAdded: String             { L10n.s("create.voice_added") }
         static func charCount(_ n: Int) -> String { String(format: L10n.s("create.char_count"), n) }
@@ -353,6 +393,7 @@ enum L10n {
         static var favoritePhrasesPlaceholder: String { L10n.s("brand.favorite_phrases_placeholder") }
         static var sectionVisualStyle: String       { L10n.s("brand.section_visual_style") }
         static var stylePacks: String               { L10n.s("brand.style_packs") }
+        static var stylePacksHint: String           { L10n.s("brand.style_packs_hint") }
         static var palette: String                  { L10n.s("brand.palette") }
         static var palettePlaceholder: String       { L10n.s("brand.palette_placeholder") }
         static var coverStyle: String               { L10n.s("brand.cover_style") }
@@ -376,15 +417,61 @@ enum L10n {
     // MARK: Calendar
 
     enum Calendar {
-        static var title: String        { L10n.s("calendar.title") }
-        static var noContent: String    { L10n.s("calendar.no_content") }
-        static var schedule: String     { L10n.s("calendar.schedule") }
-        static var hints: String        { L10n.s("calendar.hints") }
-        static var hint1: String        { L10n.s("calendar.hint1") }
-        static var hint2: String        { L10n.s("calendar.hint2") }
-        static var modePickerLabel: String { L10n.s("calendar.mode_picker_label") }
-        static var modeWeek: String     { L10n.s("calendar.mode_week") }
-        static var modeMonth: String    { L10n.s("calendar.mode_month") }
+        static var title: String               { L10n.s("calendar.title") }
+        static var noContent: String           { L10n.s("calendar.no_content") }
+        static var schedule: String            { L10n.s("calendar.schedule") }
+        static var hints: String               { L10n.s("calendar.hints") }
+        static var hint1Title: String          { L10n.s("calendar.hint1_title") }
+        static var hint1: String               { L10n.s("calendar.hint1") }
+        static var hint2Title: String          { L10n.s("calendar.hint2_title") }
+        static var hint2: String               { L10n.s("calendar.hint2") }
+        static var todayPrefix: String         { L10n.s("calendar.today_prefix") }
+        static var tomorrowPrefix: String      { L10n.s("calendar.tomorrow_prefix") }
+        static var modePickerLabel: String     { L10n.s("calendar.mode_picker_label") }
+        static var modeWeek: String            { L10n.s("calendar.mode_week") }
+        static var modeMonth: String           { L10n.s("calendar.mode_month") }
+        static var scheduleToday: String       { L10n.s("calendar.schedule_today") }
+        static var scheduleTomorrow: String    { L10n.s("calendar.schedule_tomorrow") }
+        static var scheduleThisDay: String     { L10n.s("calendar.schedule_this_day") }
+        static var statScheduledTitle: String  { L10n.s("calendar.stat_scheduled_title") }
+        static var statScheduledSubtitle: String { L10n.s("calendar.stat_scheduled_subtitle") }
+        static var statFreeTitle: String       { L10n.s("calendar.stat_free_title") }
+        static var statFreeSubtitle: String    { L10n.s("calendar.stat_free_subtitle") }
+        static var statReadyTitle: String      { L10n.s("calendar.stat_ready_title") }
+        static var statReadySubtitle: String   { L10n.s("calendar.stat_ready_subtitle") }
+        static var emptyHintNoDrafts: String   { L10n.s("calendar.empty_hint_no_drafts") }
+        static var emptyHintHasDraft: String   { L10n.s("calendar.empty_hint_has_draft") }
+        static var scheduleReadyDraft: String  { L10n.s("calendar.schedule_ready_draft") }
+        static var createContent: String       { L10n.s("calendar.create_content") }
+        static var changeDate: String          { L10n.s("calendar.change_date") }
+        static var markPublished: String       { L10n.s("calendar.mark_published") }
+        static var removeFromCalendar: String  { L10n.s("calendar.remove_from_calendar") }
+        static var readyDraftsHint: String     { L10n.s("calendar.ready_drafts_hint") }
+        static var fillWeek: String            { L10n.s("calendar.fill_week") }
+        static var tomorrowAction: String      { L10n.s("calendar.tomorrow_action") }
+        static var pickDate: String            { L10n.s("calendar.pick_date") }
+        static var open: String                { L10n.s("calendar.open") }
+        static var insightsSectionTitle: String  { L10n.s("calendar.insights_section_title") }
+        static var insightFreeSlotTitle: String  { L10n.s("calendar.insight_free_slot_title") }
+        static var insightFreeSlotText: String   { L10n.s("calendar.insight_free_slot_text") }
+        static var insightFreeSlotButton: String { L10n.s("calendar.insight_free_slot_button") }
+        static var insightAutoPlanTitle: String  { L10n.s("calendar.insight_auto_plan_title") }
+        static var insightAutoPlanText: String   { L10n.s("calendar.insight_auto_plan_text") }
+        static var insightAutoPlanButton: String { L10n.s("calendar.insight_auto_plan_button") }
+        static var insightEmptyWeekTitle: String  { L10n.s("calendar.insight_empty_week_title") }
+        static var insightEmptyWeekText: String   { L10n.s("calendar.insight_empty_week_text") }
+        static var insightEmptyWeekButton: String { L10n.s("calendar.insight_empty_week_button") }
+        static var insightLightFormatTitle: String  { L10n.s("calendar.insight_light_format_title") }
+        static var insightLightFormatText: String   { L10n.s("calendar.insight_light_format_text") }
+        static var insightLightFormatButton: String { L10n.s("calendar.insight_light_format_button") }
+        static var nothingScheduled: String    { L10n.s("calendar.nothing_scheduled") }
+        static var agendaOnePost: String       { L10n.s("calendar.agenda_one_post") }
+        static func agendaPostsCount(_ n: Int) -> String { String(format: L10n.s("calendar.agenda_posts_count"), n) }
+        static var schedulePlaceholder: String { L10n.s("calendar.schedule_placeholder") }
+        static var scheduleSheetTitle: String  { L10n.s("calendar.schedule_sheet_title") }
+        static var scheduleSheetSubtitle: String { L10n.s("calendar.schedule_sheet_subtitle") }
+        static var dateLabel: String           { L10n.s("calendar.date_label") }
+        static var timeLabel: String           { L10n.s("calendar.time_label") }
     }
 }
 

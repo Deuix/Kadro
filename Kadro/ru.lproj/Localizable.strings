@@ -12,6 +12,10 @@
 "common.next" = "Далее";
 "common.error_title" = "Что-то пошло не так";
 "common.error_message" = "Попробуйте ещё раз.";
+"common.generate" = "Генерировать";
+"common.microphone_permission" = "Нужен доступ к микрофону, чтобы записывать голосовые заметки.";
+"common.recording_failed" = "Не удалось начать запись. Попробуйте ещё раз.";
+"common.visual_prompt_hint" = "Можно оставить поле пустым для стандартной генерации или добавить уточнение для новой версии визуала.";
 
 /* Tabs */
 "tab.home" = "Главная";
@@ -70,6 +74,40 @@
 "settings.reset_confirm_title" = "Сбросить онбординг?";
 "settings.reset_confirm_message" = "Вы увидите экран приветствия при следующем запуске.";
 "settings.reset_action" = "Сбросить";
+"settings.edit_profile" = "Редактировать профиль";
+"settings.works_count" = "%d работ";
+"settings.stat_projects" = "Проектов";
+"settings.stat_projects_subtitle" = "создано";
+"settings.stat_ready" = "Готовы";
+"settings.stat_ready_subtitle" = "к публикации";
+"settings.stat_published" = "Опубликовано";
+"settings.stat_published_subtitle" = "всего";
+"settings.quick_new_task" = "Новый таск";
+"settings.quick_generate" = "Генерация";
+"settings.quick_ideas" = "Идеи";
+"settings.quick_library" = "Библиотека";
+"settings.push_notifications" = "Push-уведомления";
+"settings.notification_enabled" = "Включены";
+"settings.notification_denied" = "Откройте Настройки для включения";
+"settings.notification_provisional" = "Предварительные";
+"settings.notification_tap" = "Нажмите для настройки";
+"settings.app_language" = "Язык приложения";
+"settings.help_faq_subtitle" = "Ответы на частые вопросы";
+"settings.privacy_subtitle" = "Как мы храним ваши данные";
+"settings.terms_subtitle" = "Правила сервиса";
+"settings.rate_app_subtitle" = "Помогите нам стать лучше";
+"settings.share_app" = "Поделиться Kadro";
+"settings.share_app_subtitle" = "Расскажи друзьям";
+"settings.delete_all_title" = "Удалить все данные";
+"settings.delete_all_subtitle" = "Проекты, профили — всё будет удалено";
+"settings.delete_confirm_title" = "Удалить все данные?";
+"settings.delete_confirm_action" = "Удалить всё";
+"settings.delete_confirm_message" = "Все проекты и профили будут удалены безвозвратно.";
+"settings.reset_onboarding_subtitle" = "Показать приветственный экран";
+"settings.version_label" = "Версия %@";
+"settings.made_with_love" = "Сделано с ♥ для криэйторов";
+"settings.language_info" = "Язык определяется системными настройками iOS. Для смены откройте Настройки → Kadro → Язык.";
+"settings.open_ios_settings" = "Открыть настройки iOS";
 
 /* Onboarding */
 "onboarding.step1_headline" = "Превращай идеи\nв готовый контент";
@@ -116,7 +154,7 @@
 
 /* Create Flow */
 "create.nav_title" = "Создать";
-"create.step_service" = "Сервис";
+"create.step_service" = "Платформа";
 "create.step_format" = "Формат";
 "create.step_idea" = "Идея";
 "create.step_refine" = "Стиль";
@@ -142,7 +180,7 @@
 "create.canvas_portrait" = "Вертикальный";
 "create.canvas_square_subtitle" = "1:1 · компактно и чисто";
 "create.canvas_portrait_subtitle" = "4:5 · больше воздуха и акцента";
-"create.step_eyebrow" = "Шаг %d";
+"create.step_eyebrow" = "Шаг %d из 4";
 "create.step1_title" = "Где публикуем?";
 "create.step1_subtitle" = "Сейчас идеально оттачиваем Instagram. Остальные платформы подключим следом.";
 "create.step2_title" = "Что создаём для Instagram?";
@@ -162,6 +200,8 @@
 "create.voice_stop" = "Остановить";
 "create.voice_record" = "Записать";
 "create.voice_transcribing" = "Добавляем расшифровку в текст…";
+"create.voice_listening" = "Слушаю вас…";
+"create.voice_fallback_model" = "Использовалась запасная модель распознавания";
 "create.voice_recognized" = "Распознано: %@";
 "create.voice_added" = "Голос добавлен";
 "create.char_count" = "%d символов";
@@ -279,6 +319,7 @@
 "brand.favorite_phrases_placeholder" = "Фразы, которые вас характеризуют";
 "brand.section_visual_style" = "Визуальный стиль";
 "brand.style_packs" = "Style packs";
+"brand.style_packs_hint" = "Основа для reference-guided генерации изображений. Выберите style pack — модель будет опираться на curated references из соответствующей папки.";
 "brand.palette" = "Палитра";
 "brand.palette_placeholder" = "Например: warm ivory, graphite, muted gold";
 "brand.cover_style" = "Стиль обложки";
@@ -292,11 +333,57 @@
 "calendar.no_content" = "Нет контента на этот день";
 "calendar.schedule" = "Запланировать";
 "calendar.hints" = "Подсказки";
+"calendar.hint1_title" = "Среда пустует";
 "calendar.hint1" = "Среда без контента — добавьте обучающий пост";
+"calendar.hint2_title" = "Ресайкл";
 "calendar.hint2" = "Вчерашняя идея может стать каруселью";
+"calendar.today_prefix" = "Сегодня, ";
+"calendar.tomorrow_prefix" = "Завтра, ";
 "calendar.mode_picker_label" = "Режим";
 "calendar.mode_week" = "Неделя";
 "calendar.mode_month" = "Месяц";
+"calendar.schedule_today" = "Сегодня";
+"calendar.schedule_tomorrow" = "Завтра";
+"calendar.schedule_this_day" = "В этот день";
+"calendar.stat_scheduled_title" = "Запланировано";
+"calendar.stat_scheduled_subtitle" = "на неделе";
+"calendar.stat_free_title" = "Свободно";
+"calendar.stat_free_subtitle" = "дней";
+"calendar.stat_ready_title" = "Готово";
+"calendar.stat_ready_subtitle" = "без даты";
+"calendar.empty_hint_no_drafts" = "Создайте новый контент или выберите другую дату.";
+"calendar.empty_hint_has_draft" = "Можно быстро поставить сюда готовый draft и закрыть пустой слот.";
+"calendar.schedule_ready_draft" = "Поставить ready draft";
+"calendar.create_content" = "Создать контент";
+"calendar.change_date" = "Изменить дату";
+"calendar.mark_published" = "Отметить как опубликовано";
+"calendar.remove_from_calendar" = "Убрать из календаря";
+"calendar.ready_drafts_hint" = "Готовый контент без даты — поставьте его в слот за секунды.";
+"calendar.fill_week" = "Заполнить неделю";
+"calendar.tomorrow_action" = "Завтра";
+"calendar.pick_date" = "Выбрать дату";
+"calendar.open" = "Открыть";
+"calendar.insights_section_title" = "Советы";
+"calendar.insight_free_slot_title" = "Свободный слот";
+"calendar.insight_free_slot_text" = "Есть готовый draft, который можно поставить на выбранный день.";
+"calendar.insight_free_slot_button" = "Поставить";
+"calendar.insight_auto_plan_title" = "Автоплан недели";
+"calendar.insight_auto_plan_text" = "Kadro может разложить ready drafts по свободным дням недели автоматически.";
+"calendar.insight_auto_plan_button" = "Заполнить";
+"calendar.insight_empty_week_title" = "Неделя пустует";
+"calendar.insight_empty_week_text" = "Добавьте хотя бы один post или carousel, чтобы не терять ритм публикаций.";
+"calendar.insight_empty_week_button" = "Создать";
+"calendar.insight_light_format_title" = "Нужен лёгкий формат";
+"calendar.insight_light_format_text" = "На этой неделе много carousel. Разбавьте план коротким post для ритма.";
+"calendar.insight_light_format_button" = "Post";
+"calendar.nothing_scheduled" = "Ничего не запланировано";
+"calendar.agenda_one_post" = "1 публикация в плане";
+"calendar.agenda_posts_count" = "%d публикаций в плане";
+"calendar.schedule_placeholder" = "Запланировать";
+"calendar.schedule_sheet_title" = "Выберите день и время публикации";
+"calendar.schedule_sheet_subtitle" = "Можно быстро назначить слот и вернуться к планированию недели.";
+"calendar.date_label" = "Дата";
+"calendar.time_label" = "Время";
 
 /* Content Types */
 "content_type.post" = "Пост";

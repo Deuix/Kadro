@@ -20,7 +20,7 @@ final class VoiceNoteRecorder: ObservableObject {
         
         let granted = await requestPermission()
         guard granted else {
-            lastErrorMessage = "Нужен доступ к микрофону, чтобы записывать голосовые заметки."
+            lastErrorMessage = NSLocalizedString("common.microphone_permission", comment: "")
             return
         }
         
@@ -48,7 +48,7 @@ final class VoiceNoteRecorder: ObservableObject {
             isRecording = true
             startTimer()
         } catch {
-            lastErrorMessage = "Не удалось начать запись. Попробуйте ещё раз."
+            lastErrorMessage = NSLocalizedString("common.recording_failed", comment: "")
         }
     }
     

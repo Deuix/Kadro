@@ -28,10 +28,10 @@ struct TextEditSheet: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 
                 HStack(spacing: 12) {
-                    KadroSecondaryButton(title: "Отмена") {
+                    KadroSecondaryButton(title: L10n.Common.cancel) {
                         dismiss()
                     }
-                    KadroPrimaryButton(title: "Сохранить") {
+                    KadroPrimaryButton(title: L10n.Common.save) {
                         onSave(draftText)
                         dismiss()
                     }

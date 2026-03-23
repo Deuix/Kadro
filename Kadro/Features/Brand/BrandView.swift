@@ -189,7 +189,7 @@ struct BrandView: View {
                 .font(.kadroTitle3)
                 .foregroundColor(.kadroCharcoal)
             
-            Text("Это foundation для reference-guided image pipeline: пользователь выбирает style pack, а дальше модель будет опираться на curated references из соответствующей папки.")
+            Text(L10n.Brand.stylePacksHint)
                 .font(.kadroCallout)
                 .foregroundColor(.kadroWarmGray)
             

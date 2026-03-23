@@ -62,11 +62,11 @@ struct GeneratedStyleVisualView: View {
                 .padding(.bottom, 32)
             }
             .background(Color.kadroIvory)
-            .navigationTitle("Визуал")
+            .navigationTitle(L10n.Generated.visual)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Закрыть") {
+                    Button(L10n.Common.close) {
                         dismiss()
                     }
                     .foregroundColor(.kadroLime)

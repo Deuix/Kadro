@@ -212,7 +212,7 @@ struct GeneratedContentView: View {
     private var tagSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             KadroSectionHeader(title: L10n.Generated.hashtags)
-            FlowLayout(spacing: 8) {
+            KadroFlowLayout(spacing: 8) {
                 ForEach(result.payload.hashtags, id: \.self) { hashtag in
                     KadroChip(title: hashtag, isSelected: false) {}.allowsHitTesting(false)
                 }
@@ -508,3 +508,4 @@ struct GeneratedContentView: View {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
+

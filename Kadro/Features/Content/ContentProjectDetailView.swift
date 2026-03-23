@@ -36,8 +36,8 @@ private extension KadroStyleVisualTarget {
     
     var useButtonTitle: String {
         switch self {
-        case .cover: return L10n.Generated.useAsCover
-        case .slide: return L10n.Generated.useForSlide
+        case .cover: return "Использовать как обложку"
+        case .slide: return "Использовать для слайда"
         }
     }
 }
@@ -60,6 +60,7 @@ struct ContentProjectDetailView: View {
     let project: ContentProject
     
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query private var profiles: [BrandProfile]
     
     @State private var isRegenerating = false
@@ -73,7 +74,6 @@ struct ContentProjectDetailView: View {
     @State private var visualLoadingSubtitle: String = ""
     @State private var textEditRequest: TextEditRequest?
     @State private var copiedFieldID: EditableTextField?
-    @Environment(\.colorScheme) private var colorScheme
     
     private let aiService = KadroAIService()
     private let styleImageService = KadroStyleImageService()
@@ -107,425 +107,491 @@ struct ContentProjectDetailView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                if isInstagramPost {
-                    visualGenerationCard
-                    if let mainText = project.mainText, !mainText.isEmpty {
-                        textSection(title: L10n.Generated.postMainText, body: mainText, field: .mainText)
-                    }
-                    if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
-                        textSection(title: L10n.Generated.shortVersion, body: shortVersion, field: .shortVersion)
-                    }
-                } else {
-                    heroCard
-                    visualGenerationCard
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 32) {
+                        heroHeader
+                        
+                        visualHeaderSection
+                        
+                        // Dynamic text fields
+                        VStack(spacing: 32) {
+                            if !project.rawInput.isEmpty {
+                                editorialTextSection(title: "Моя идея", bodyText: project.rawInput, field: .rawInput)
+                            }
 
-                    if !project.rawInput.isEmpty {
-                        textSection(title: L10n.Generated.sourceIdea, body: project.rawInput, field: .rawInput)
-                    }
-
-                    if let hook = project.hook, !hook.isEmpty {
-                        textSection(title: L10n.Generated.hook, body: hook, field: .hook)
-                    }
-
-                    if let mainText = project.mainText, !mainText.isEmpty {
-                        textSection(title: project.type == .stories ? L10n.Generated.storiesDraft : L10n.Generated.mainText, body: mainText, field: .mainText)
-                    }
-
-                    if let cta = project.cta, !cta.isEmpty {
-                        textSection(title: L10n.Generated.cta, body: cta, field: .cta)
-                    }
-
-                    if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
-                        textSection(title: L10n.Generated.shortVersion, body: shortVersion, field: .shortVersion)
-                    }
-
-                    if let caption = project.caption, !caption.isEmpty {
-                        textSection(title: L10n.Generated.caption, body: caption, field: .caption)
-                    }
-
-                    if let hashtags = project.hashtags, !hashtags.isEmpty {
-                        hashtagsSection(hashtags)
-                    }
-
-                    if !sortedSlides.isEmpty {
-                        slidesSection(sortedSlides)
-                    }
-
-                    if let scriptBeats = project.scriptBeats, !scriptBeats.isEmpty {
-                        textSection(title: L10n.Generated.scriptBeats, body: scriptBeats, field: .scriptBeats)
-                    }
-
-                    if let onScreenText = project.onScreenText, !onScreenText.isEmpty {
-                        textSection(title: L10n.Generated.onScreenText, body: onScreenText, field: .onScreenText)
-                    }
-
-                    if let coverIdea = project.coverIdea, !coverIdea.isEmpty {
-                        textSection(title: L10n.Generated.coverIdea, body: coverIdea, field: .coverIdea)
-                    }
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
-            .padding(.bottom, 32)
-        }
-        .background(Color.kadroBackground(for: colorScheme))
-        .navigationTitle(project.title.isEmpty ? L10n.Common.untitled : project.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(L10n.Generated.newVersion) {
-                    Task {
-                        await regenerateProject()
-                    }
-                }
-                .font(.kadroFootnote)
-                .foregroundColor(.kadroLime)
-                .disabled(isRegenerating || isGeneratingVisual)
-            }
-        }
-        .sheet(item: $latestResult) { result in
-            GeneratedContentView(result: result)
-        }
-        .sheet(item: $generatedVisualPreview) { preview in
-            GeneratedStyleVisualView(
-                result: preview.result,
-                useButtonTitle: preview.target.useButtonTitle
-            ) {
-                applyGeneratedVisual(preview)
-            }
-        }
-        .sheet(item: $visualPromptRequest) { request in
-            VisualPromptInputSheet(title: request.title, promptText: $visualPromptText) {
-                Task {
-                    await handlePromptGeneration(request)
-                }
-            }
-        }
-        .alert(
-            L10n.Common.errorTitle,
-            isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            ),
-            actions: {
-                Button(L10n.Common.ok, role: .cancel) {
-                    errorMessage = nil
-                }
-            },
-            message: {
-                Text(errorMessage ?? L10n.Common.errorMessage)
-            }
-        )
-        .sheet(item: $textEditRequest) { request in
-            TextEditSheet(
-                title: request.title,
-                text: request.text
-            ) { updatedText in
-                saveEditedText(updatedText, for: request.field)
-            }
-        }
-        .overlay {
-            if isRegenerating || isGeneratingVisual {
-                loadingOverlay
-            }
-        }
-    }
-    
-    private var heroCard: some View {
-        KadroCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    KadroStatusBadge(title: project.type.displayName, color: .kadroLime)
-                    KadroStatusBadge(title: project.status.displayName, color: statusColor(for: project.status))
-                    Spacer()
-                }
-                
-                Text(project.title.isEmpty ? L10n.Common.untitled : project.title)
-                    .font(.kadroTitle2)
-                    .foregroundColor(.kadroCharcoal)
-                
-                HStack(spacing: 8) {
-                    Text(project.platform.rawValue)
-                        .font(.kadroFootnote)
-                        .foregroundColor(.kadroWarmGray)
-                    
-                    if let tone = project.tone {
-                        Text("· \(tone.displayName)")
-                            .font(.kadroFootnote)
-                            .foregroundColor(.kadroWarmGray)
-                    }
-
-                    if let goal = project.goal {
-                        Text("· \(goal.displayName)")
-                            .font(.kadroFootnote)
-                            .foregroundColor(.kadroWarmGray)
-                    }
-                }
-                
-                Text(project.updatedAt.formatted(date: .abbreviated, time: .shortened))
-                    .font(.kadroCaption)
-                    .foregroundColor(.kadroWarmGray)
-            }
-        }
-    }
-    
-    private var visualGenerationCard: some View {
-        KadroCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(isInstagramPost ? L10n.Generated.visualSectionPost : L10n.Generated.visualDraft)
-                    .font(.kadroTitle3)
-                    .foregroundColor(.kadroCharcoal)
-                
-                if let selectedStylePack {
-                    Text(L10n.Generated.stylePackLabel(selectedStylePack.displayName))
-                        .font(.kadroBodyMedium)
-                        .foregroundColor(.kadroCharcoal)
-                    Text(selectedStylePack.shortDescription)
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
-                    Text(L10n.Generated.referencesFound(selectedStylePackReferenceCount))
-                        .font(.kadroFootnote)
-                        .foregroundColor(.kadroWarmGray)
-                    Text(selectedStylePack.referenceFolder)
-                        .font(.kadroCaption)
-                        .foregroundColor(.kadroWarmGray)
-                    
-                    if let asset = coverPreviewAsset {
-                        KadroPreviewableGeneratedImage(asset: asset)
-                        if let meta = coverMetaText {
-                            Text(meta)
-                                .font(.kadroCaption)
-                                .foregroundColor(.kadroWarmGray)
+                            if let hook = project.hook, !hook.isEmpty {
+                                editorialTextSection(title: "Хук (Заголовок)", bodyText: hook, field: .hook)
+                            }
+                            
+                            if let mainText = project.mainText, !mainText.isEmpty {
+                                editorialTextSection(title: project.type == .stories ? "Сценарий (Stories)" : "Основной текст", bodyText: mainText, field: .mainText)
+                            }
+                            
+                            if let cta = project.cta, !cta.isEmpty {
+                                editorialTextSection(title: "Призыв к действию", bodyText: cta, field: .cta)
+                            }
+                            
+                            if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
+                                editorialTextSection(title: "Короткая версия", bodyText: shortVersion, field: .shortVersion)
+                            }
+                            
+                            if let caption = project.caption, !caption.isEmpty {
+                                editorialTextSection(title: "Описание (Caption)", bodyText: caption, field: .caption)
+                            }
+                            
+                            if let hashtags = project.hashtags, !hashtags.isEmpty {
+                                hashtagsSection(hashtags)
+                            }
+                            
+                            // Carousel specific
+                            if !sortedSlides.isEmpty {
+                                editorialSlidesSection(sortedSlides)
+                            }
+                            
+                            // Video specific
+                            if let scriptBeats = project.scriptBeats, !scriptBeats.isEmpty {
+                                editorialTextSection(title: "Сценарий (Блоки)", bodyText: scriptBeats, field: .scriptBeats)
+                            }
+                            if let onScreenText = project.onScreenText, !onScreenText.isEmpty {
+                                editorialTextSection(title: "Текст на экране", bodyText: onScreenText, field: .onScreenText)
+                            }
+                            if let coverIdea = project.coverIdea, !coverIdea.isEmpty {
+                                editorialTextSection(title: "Идея обложки", bodyText: coverIdea, field: .coverIdea)
+                            }
                         }
+                        
+                        Spacer(minLength: 80) // Bottom bar padding
+                    }
+                    .padding(.bottom, 60)
+                }
+                .background(Color.kadroIvory)
+                
+                // Floating Bottom Action Bar
+                floatingActionBar
+                
+            }
+            .navigationBarHidden(true)
+            .sheet(item: $latestResult) { result in
+                GeneratedContentView(result: result)
+            }
+            .sheet(item: $generatedVisualPreview) { preview in
+                GeneratedStyleVisualView(
+                    result: preview.result,
+                    useButtonTitle: preview.target.useButtonTitle
+                ) {
+                    applyGeneratedVisual(preview)
+                }
+            }
+            .sheet(item: $visualPromptRequest) { request in
+                VisualPromptInputSheet(title: request.title, promptText: $visualPromptText) {
+                    Task {
+                        await handlePromptGeneration(request)
+                    }
+                }
+            }
+            .alert(
+                "Ошибка",
+                isPresented: Binding(
+                    get: { errorMessage != nil },
+                    set: { if !$0 { errorMessage = nil } }
+                ),
+                actions: { Button("ОК", role: .cancel) { errorMessage = nil } },
+                message: { Text(errorMessage ?? "Произошла ошибка") }
+            )
+            .sheet(item: $textEditRequest) { request in
+                TextEditSheet(title: request.title, text: request.text) { updatedText in
+                    saveEditedText(updatedText, for: request.field)
+                }
+            }
+            .overlay {
+                if isRegenerating || isGeneratingVisual {
+                    loadingOverlay
+                }
+            }
+        }
+    }
+    
+    // MARK: - Header
+    
+    private var heroHeader: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Top Nav
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.kadroCharcoal)
+                        .frame(width: 44, height: 44)
+                        .background(Color.kadroSoftWhite)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.kadroSand, lineWidth: 0.5))
+                }
+                Spacer()
+                
+                // Badges
+                HStack(spacing: 8) {
+                    KadroStatusBadge(title: project.type.rawValue.uppercased(), color: .kadroWarmGray)
+                    KadroStatusBadge(title: project.status.rawValue, color: statusColor(for: project.status))
+                }
+            }
+            
+            // Title
+            Text(project.title.isEmpty ? "Без названия" : project.title)
+                .font(.custom("New York", size: 36).weight(.bold))
+                .foregroundColor(.kadroCharcoal)
+                .lineSpacing(4)
+            
+            Text(project.updatedAt.formatted(date: .long, time: .shortened))
+                .font(.custom("New York", size: 14))
+                .foregroundColor(.kadroWarmGray)
+                .italic()
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 16)
+    }
+    
+    // MARK: - Visual Section (Hero Image)
+    
+    @ViewBuilder
+    private var visualHeaderSection: some View {
+        if let asset = coverPreviewAsset {
+            // Show large image
+            VStack(spacing: 12) {
+                KadroPreviewableGeneratedImage(asset: asset, cornerRadius: 24)
+                    .padding(.horizontal, 24)
+                
+                Button {
+                    visualPromptText = project.generatedCoverImagePrompt ?? ""
+                    visualPromptRequest = DetailVisualPromptRequest(target: .cover, title: coverButtonTitle)
+                } label: {
+                    HStack {
+                        Image(systemName: "sparkles")
+                        Text(coverButtonTitle)
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.kadroCharcoal)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .background(Color.kadroSoftWhite)
+                    .clipShape(Capsule())
+                    .overlay(Capsule().stroke(Color.kadroSand, lineWidth: 0.5))
+                }
+                .disabled(isGeneratingVisual)
+            }
+        } else if selectedStylePackReferenceCount > 0 {
+            // Show generator CTA
+            Button {
+                visualPromptText = project.generatedCoverImagePrompt ?? ""
+                visualPromptRequest = DetailVisualPromptRequest(target: .cover, title: coverButtonTitle)
+            } label: {
+                VStack(spacing: 12) {
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundColor(.kadroWarmGray)
+                    Text("Сгенерировать обложку (AI)")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.kadroCharcoal)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+                .background(Color.kadroSoftWhite)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.kadroSand, style: StrokeStyle(lineWidth: 1, dash: [6])))
+                .padding(.horizontal, 24)
+            }
+            .buttonStyle(.plain)
+            .disabled(isGeneratingVisual)
+        }
+    }
+    
+    // MARK: - Editorial Text Block
+    
+    private func editorialTextSection(title: String, bodyText: String, field: EditableTextField) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Section Header
+            HStack(alignment: .bottom) {
+                Text(title.uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1.5)
+                    .foregroundColor(.kadroWarmGray)
+                
+                Spacer()
+                
+                // Inline Tools
+                HStack(spacing: 16) {
+                    Button {
+                        UIPasteboard.general.string = bodyText
+                        withAnimation(.easeInOut(duration: 0.25)) { copiedFieldID = field }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            if copiedFieldID == field { copiedFieldID = nil }
+                        }
+                    } label: {
+                        Image(systemName: copiedFieldID == field ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(copiedFieldID == field ? .kadroSuccess : .kadroWarmGray)
                     }
                     
                     Button {
-                        visualPromptText = project.generatedCoverImagePrompt ?? ""
-                        visualPromptRequest = DetailVisualPromptRequest(
-                            target: .cover,
-                            title: coverButtonTitle
-                        )
+                        textEditRequest = TextEditRequest(title: title, field: field, text: bodyText)
                     } label: {
-                        Text(coverButtonTitle)
-                            .font(.kadroButton)
-                            .foregroundColor(.kadroCharcoal)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.kadroLime)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.kadroWarmGray)
                     }
-                    .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
-                    .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.55 : 1)
-                } else {
-                    Text(L10n.Generated.detailNoStylePack)
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
                 }
             }
-        }
-    }
-    
-    private var loadingOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.14)
-                .ignoresSafeArea()
             
-            KadroCard {
-                VStack(spacing: 12) {
-                    ProgressView()
-                        .tint(.kadroCharcoal)
-                    Text(isGeneratingVisual ? visualLoadingTitle : L10n.Generated.regeneratingTitle)
-                        .font(.kadroTitle3)
-                        .foregroundColor(.kadroCharcoal)
-                    Text(isGeneratingVisual ? visualLoadingSubtitle : L10n.Generated.regeneratingSubtitle)
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.vertical, 8)
-            }
-            .frame(maxWidth: 320)
-            .padding(24)
+            // Text Content (No card backgrounds, editorial look)
+            Text(bodyText)
+                .font(.custom("New York", size: 18).weight(.regular))
+                .lineSpacing(6)
+                .foregroundColor(.kadroCharcoal)
+                .multilineTextAlignment(.leading)
         }
+        .padding(.horizontal, 24)
     }
     
     private func hashtagsSection(_ hashtags: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            KadroSectionHeader(title: L10n.Generated.hashtags)
-            FlowLayout(spacing: 8) {
-                ForEach(hashtags.split(separator: " ").map(String.init), id: \.self) { hashtag in
-                    KadroChip(title: hashtag, isSelected: false) {}
-                        .allowsHitTesting(false)
-                }
-            }
-        }
-    }
-    
-    private func slidesSection(_ slides: [CarouselSlide]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(L10n.Generated.carouselSlides)
-                    .font(.kadroTitle3)
-                    .foregroundColor(.kadroCharcoal)
-                Spacer()
-                if !generatedSlidePreviewAssets.isEmpty {
-                    KadroDownloadGeneratedImagesButton(assets: generatedSlidePreviewAssets, isDisabled: isGeneratingVisual) { isDownloading in
-                        Text(isDownloading ? L10n.Generated.downloading : L10n.Generated.downloadAll)
-                            .font(.kadroFootnote)
-                            .foregroundColor(.kadroLime)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("ХЭШТЕГИ")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.5)
+                .foregroundColor(.kadroWarmGray)
+                .padding(.horizontal, 24)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(hashtags.split(separator: " ").map(String.init), id: \.self) { hashtag in
+                        Text(hashtag)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.kadroCharcoal)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.kadroSoftWhite)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.kadroSand, lineWidth: 0.5))
                     }
                 }
-                Button(L10n.Generated.allVisuals) {
-                    Task {
-                        await generateAllSlideVisuals()
-                    }
-                }
-                .font(.kadroFootnote)
-                .foregroundColor(.kadroLime)
-                .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
+                .padding(.horizontal, 24)
             }
             
-            VStack(spacing: 10) {
-                ForEach(slides) { slide in
-                    KadroCard {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(L10n.Generated.slideFormat(slide.order))
-                                .font(.kadroCaption)
-                                .foregroundColor(.kadroWarmGray)
-                            Text(slide.headline)
-                                .font(.kadroTitle3)
-                                .foregroundColor(.kadroCharcoal)
-                            if !slide.bodyText.isEmpty {
-                                Text(slide.bodyText)
-                                    .font(.kadroBody)
-                                    .foregroundColor(.kadroWarmGray)
-                            }
-                            if let cta = slide.ctaText, !cta.isEmpty {
-                                Text(cta)
-                                    .font(.kadroCallout)
-                                    .foregroundColor(.kadroCharcoal)
-                            }
-                            
-                            if let asset = slidePreviewAsset(for: slide) {
-                                KadroPreviewableGeneratedImage(asset: asset)
-                                if let meta = slideMetaText(slide) {
-                                    Text(meta)
-                                        .font(.kadroCaption)
-                                        .foregroundColor(.kadroWarmGray)
-                                }
-                            }
-                            
-                            Button {
-                                visualPromptText = slide.generatedImagePrompt ?? ""
-                                visualPromptRequest = DetailVisualPromptRequest(
-                                    target: .slide(slide.id),
-                                    title: slide.generatedImageData == nil ? L10n.Generated.createSlideVisual : L10n.Generated.regenerateSlideVisual
-                                )
-                            } label: {
-                                Text(slide.generatedImageData == nil ? L10n.Generated.createSlideVisual : L10n.Generated.regenerateSlideVisual)
-                                    .font(.kadroFootnote)
-                                    .foregroundColor(.kadroCharcoal)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(Color.kadroBackground(for: colorScheme))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
-                            .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.55 : 1)
-                        }
-                    }
+            // Copy tags inline
+            Button {
+                UIPasteboard.general.string = hashtags
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "doc.on.doc")
+                    Text("Скопировать всё")
                 }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.kadroWarmGray)
             }
+            .padding(.horizontal, 24)
+            .padding(.top, 4)
         }
     }
     
-    private func textSection(title: String, body: String, field: EditableTextField) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                KadroSectionHeader(title: title)
+    // MARK: - Bento Carousel Slides
+    
+    private func editorialSlidesSection(_ slides: [CarouselSlide]) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .bottom) {
+                Text("СЛАЙДЫ КАРУСЕЛИ")
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1.5)
+                    .foregroundColor(.kadroWarmGray)
+                
                 Spacer()
                 
-                // Copy button
-                Button {
-                    UIPasteboard.general.string = body
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        copiedFieldID = field
+                if !generatedSlidePreviewAssets.isEmpty {
+                    KadroDownloadGeneratedImagesButton(assets: generatedSlidePreviewAssets, isDisabled: isGeneratingVisual) { isDownloading in
+                        Image(systemName: isDownloading ? "arrow.down.circle.fill" : "square.and.arrow.down")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.kadroCharcoal)
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            if copiedFieldID == field {
-                                copiedFieldID = nil
-                            }
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: copiedFieldID == field ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 12, weight: .medium))
-                        if copiedFieldID == field {
-                            Text(L10n.Generated.copied)
-                                .font(.kadroCaption)
-                        }
-                    }
-                    .foregroundColor(copiedFieldID == field ? .kadroSuccess : .kadroWarmGray)
                 }
-                .buttonStyle(.plain)
                 
-                // Edit button
                 Button {
-                    textEditRequest = TextEditRequest(title: title, field: field, text: body)
+                    Task { await generateAllSlideVisuals() }
                 } label: {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.kadroWarmGray)
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.kadroCharcoal)
                 }
-                .buttonStyle(.plain)
+                .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
+                .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.5 : 1)
             }
-            KadroCard {
-                Text(body)
-                    .font(.kadroBody)
-                    .foregroundColor(.kadroCharcoal)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+            .padding(.horizontal, 24)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(slides) { slide in
+                        bentoSlideCard(slide)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16) // For slight shadow
             }
         }
     }
     
-    private var coverMetaText: String? {
-        var parts: [String] = []
-        if let kind = project.generatedCoverImageVisualKind, !kind.isEmpty {
-            parts.append(kind)
+    private func bentoSlideCard(_ slide: CarouselSlide) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Visual Area
+            if let asset = slidePreviewAsset(for: slide) {
+                KadroPreviewableGeneratedImage(asset: asset, cornerRadius: 20)
+                    .padding(8)
+            } else {
+                ZStack {
+                    Color.kadroIvory
+                    
+                    Button {
+                        visualPromptText = slide.generatedImagePrompt ?? ""
+                        visualPromptRequest = DetailVisualPromptRequest(
+                            target: .slide(slide.id),
+                            title: "Создать вижуал"
+                        )
+                    } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: "sparkles.rectangle.stack")
+                                .font(.system(size: 24, weight: .light))
+                            Text("AI Visual")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .foregroundColor(.kadroWarmGray)
+                    }
+                    .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
+                }
+                .frame(height: 200)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .padding(8)
+            }
+            
+            // Text Area
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Слайд \(slide.order)")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(1)
+                    .foregroundColor(.kadroWarmGray)
+                
+                Text(slide.headline)
+                    .font(.custom("New York", size: 16).weight(.semibold))
+                    .foregroundColor(.kadroCharcoal)
+                    .lineLimit(2)
+                
+                if !slide.bodyText.isEmpty {
+                    Text(slide.bodyText)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(.kadroCharcoal.opacity(0.8))
+                        .lineLimit(3)
+                }
+                
+                Spacer(minLength: 0)
+            }
+            .padding(16)
         }
-        if let pack = project.generatedCoverImageStylePackID, !pack.isEmpty {
-            parts.append(pack)
+        .frame(width: 240, height: 380)
+        .background(Color.kadroSoftWhite)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.kadroSand, lineWidth: 0.5))
+    }
+    
+    // MARK: - Floating Bottom Bar
+    
+    private var floatingActionBar: some View {
+        VStack {
+            Button {
+                Task { await regenerateProject() }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 18, weight: .medium))
+                    Text("Сгенерировать новый вариант")
+                        .font(.system(size: 16, weight: .bold))
+                }
+                .foregroundColor(.kadroCharcoal)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(Color.kadroLime)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.kadroSand, lineWidth: 0.5))
+                // Beautiful inner shadow effect native to the style
+                .shadow(color: Color.kadroLime.opacity(0.4), radius: 16, y: 8)
+            }
+            .buttonStyle(.plain)
+            .disabled(isRegenerating || isGeneratingVisual)
+            .opacity((isRegenerating || isGeneratingVisual) ? 0.5 : 1)
         }
-        if let refs = project.generatedCoverImageReferenceFilenames, !refs.isEmpty {
-            parts.append(refs)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(
+            Rectangle()
+                .fill(Color.kadroIvory.opacity(0.8))
+                .ignoresSafeArea()
+                .backdropFilter()
+        )
+    }
+
+    // MARK: - Overlays
+    
+    private var loadingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+                .backdropFilter()
+            
+            VStack(spacing: 20) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .tint(.kadroCharcoal)
+                Text(isGeneratingVisual ? visualLoadingTitle : "Переписываем историю")
+                    .font(.custom("New York", size: 24).weight(.medium))
+                    .foregroundColor(.kadroCharcoal)
+                Text(isGeneratingVisual ? visualLoadingSubtitle : "ИИ создает новую комбинацию...")
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(.kadroWarmGray)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(40)
+            .background(Color.kadroIvory)
+            .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+            .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
         }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+    
+    // MARK: - Logic & Properties
+    
+    private var coverPreviewAsset: KadroPreviewImageAsset? {
+        guard let data = project.generatedCoverImageData else { return nil }
+        return KadroPreviewImageAsset(
+            id: "project-cover-\(project.id.uuidString)",
+            title: project.title.isEmpty ? "Cover" : project.title,
+            subtitle: nil, // Removed ugly meta
+            filenameStem: "kadro-\(project.title.isEmpty ? "cover" : project.title)-cover",
+            imageData: data
+        )
+    }
+    
+    private func slidePreviewAsset(for slide: CarouselSlide) -> KadroPreviewImageAsset? {
+        guard let data = slide.generatedImageData else { return nil }
+        return KadroPreviewImageAsset(
+            id: "project-slide-\(slide.id.uuidString)",
+            title: "Слайд \(slide.order)",
+            subtitle: nil,
+            filenameStem: "kadro-\(project.title.isEmpty ? "carousel" : project.title)-slide-\(slide.order)",
+            imageData: data
+        )
     }
     
     private var coverButtonTitle: String {
         if isInstagramPost {
-            return project.generatedCoverImageData == nil ? L10n.Generated.createCoverImage : L10n.Generated.regenerateCoverImage
+            return project.generatedCoverImageData == nil ? "Создать обложку поста" : "Изменить обложку"
         }
-        return project.generatedCoverImageData == nil ? L10n.Generated.createCover : L10n.Generated.regenerateCover
-    }
-    
-    private func slideMetaText(_ slide: CarouselSlide) -> String? {
-        var parts: [String] = []
-        if let kind = slide.generatedImageVisualKind, !kind.isEmpty {
-            parts.append(kind)
-        }
-        if let pack = slide.generatedImageStylePackID, !pack.isEmpty {
-            parts.append(pack)
-        }
-        if let refs = slide.generatedImageReferenceFilenames, !refs.isEmpty {
-            parts.append(refs)
-        }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        return project.generatedCoverImageData == nil ? "Создать обложку" : "Изменить обложку"
     }
     
     private func statusColor(for status: ContentStatus) -> Color {
@@ -536,8 +602,6 @@ struct ContentProjectDetailView: View {
         case .published: return .kadroCharcoal
         }
     }
-    
-    // MARK: - Save Edited Text
     
     private func saveEditedText(_ newText: String, for field: EditableTextField) {
         let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -565,7 +629,7 @@ struct ContentProjectDetailView: View {
         guard !isRegenerating else { return }
         let trimmedInput = project.rawInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInput.isEmpty else {
-            errorMessage = L10n.Generated.noSourceIdea
+            errorMessage = "Нет изначальной идеи для регенерации"
             return
         }
 
@@ -615,8 +679,8 @@ struct ContentProjectDetailView: View {
         guard !isGeneratingVisual else { return }
         isGeneratingVisual = true
         errorMessage = nil
-        visualLoadingTitle = L10n.Generated.loadingCoverTitle
-        visualLoadingSubtitle = L10n.Generated.loadingCoverSubtitle
+        visualLoadingTitle = "Рисуем обложку"
+        visualLoadingSubtitle = "AI подбирает нужный стиль..."
         
         do {
             let response = try await styleImageService.generateCoverVisual(project: project, brandProfile: brandProfile, promptOverride: promptOverride)
@@ -633,8 +697,8 @@ struct ContentProjectDetailView: View {
         guard !isGeneratingVisual else { return }
         isGeneratingVisual = true
         errorMessage = nil
-        visualLoadingTitle = L10n.Generated.loadingSlideTitle
-        visualLoadingSubtitle = L10n.Generated.loadingSlideSubtitle(slide.order)
+        visualLoadingTitle = "Оформляем слайд"
+        visualLoadingSubtitle = "Рисуем слайд номер \(slide.order)..."
         
         do {
             let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile, promptOverride: promptOverride)
@@ -656,14 +720,14 @@ struct ContentProjectDetailView: View {
         errorMessage = nil
         
         for (index, slide) in slides.enumerated() {
-            visualLoadingTitle = L10n.Generated.loadingAllSlidesTitle
-            visualLoadingSubtitle = L10n.Generated.loadingAllSlidesSubtitle(index + 1, slides.count, slide.headline)
+            visualLoadingTitle = "Магия карусели"
+            visualLoadingSubtitle = "Рисуем слайд \(index + 1) из \(slides.count)"
 
             do {
                 let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile)
                 try persistGeneratedVisual(response, target: .slide(slide.id))
             } catch {
-                errorMessage = L10n.Generated.slideError(slide.order, error.localizedDescription)
+                errorMessage = "Ошибка на слайде \(slide.order): \(error.localizedDescription)"
                 break
             }
         }
@@ -683,7 +747,7 @@ struct ContentProjectDetailView: View {
     @MainActor
     private func persistGeneratedVisual(_ result: KadroGeneratedStyleImageResponse, target: KadroStyleVisualTarget) throws {
         guard let imageData = styleImageService.imageData(from: result.imageDataURL) else {
-            throw NSError(domain: "KadroStyleImageService", code: 1, userInfo: [NSLocalizedDescriptionKey: L10n.Generated.saveVisualError])
+            throw NSError(domain: "KadroStyleImageService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Не удалось сохранить фото"])
         }
 
         switch target {
@@ -697,7 +761,7 @@ struct ContentProjectDetailView: View {
             project.generatedCoverImageUpdatedAt = Date()
         case .slide(let slideID):
             guard let slide = project.slides?.first(where: { $0.id == slideID }) else {
-                throw NSError(domain: "KadroStyleImageService", code: 2, userInfo: [NSLocalizedDescriptionKey: L10n.Generated.findSlideError])
+                throw NSError(domain: "KadroStyleImageService", code: 2, userInfo: [NSLocalizedDescriptionKey: "Слайд не найден"])
             }
             slide.generatedImageData = imageData
             slide.generatedImagePrompt = result.promptUsed
@@ -711,34 +775,17 @@ struct ContentProjectDetailView: View {
         project.updatedAt = Date()
         try modelContext.save()
     }
-    
-    private var coverPreviewAsset: KadroPreviewImageAsset? {
-        guard let data = project.generatedCoverImageData else { return nil }
-        return KadroPreviewImageAsset(
-            id: "project-cover-\(project.id.uuidString)",
-            title: project.title.isEmpty ? "Cover" : project.title,
-            subtitle: coverMetaText,
-            filenameStem: "kadro-\(project.title.isEmpty ? "cover" : project.title)-cover",
-            imageData: data
-        )
-    }
-    
-    private func slidePreviewAsset(for slide: CarouselSlide) -> KadroPreviewImageAsset? {
-        guard let data = slide.generatedImageData else { return nil }
-        return KadroPreviewImageAsset(
-            id: "project-slide-\(slide.id.uuidString)",
-            title: L10n.Generated.slideFormat(slide.order),
-            subtitle: slideMetaText(slide),
-            filenameStem: "kadro-\(project.title.isEmpty ? "carousel" : project.title)-slide-\(slide.order)",
-            imageData: data
-        )
-    }
 }
+
+// MARK: - TextEditSheet Mock (Assumed to exist in codebase)
+// If it doesn't, ensure you have the actual `TextEditSheet` struct or add it.
 
 #Preview {
     NavigationStack {
-        ContentProjectDetailView(project: ContentProject(title: "Пример", rawInput: "Сырая идея", type: .post, status: .ready, platform: .instagram))
+        ContentProjectDetailView(project: ContentProject(title: "Эстетика минимализма", rawInput: "Сырая идея про дизайн", type: .post, status: .ready, platform: .instagram))
     }
     .environment(AppState())
+#if canImport(SwiftData)
     .modelContainer(for: [ContentProject.self, BrandProfile.self], inMemory: true)
+#endif
 }
