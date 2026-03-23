@@ -61,6 +61,7 @@ struct ContentProjectDetailView: View {
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @Query private var profiles: [BrandProfile]
     
     @State private var isRegenerating = false
@@ -112,45 +113,33 @@ struct ContentProjectDetailView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 32) {
                         heroHeader
-                        
                         visualHeaderSection
                         
-                        // Dynamic text fields
                         VStack(spacing: 32) {
                             if !project.rawInput.isEmpty {
                                 editorialTextSection(title: "Моя идея", bodyText: project.rawInput, field: .rawInput)
                             }
-
                             if let hook = project.hook, !hook.isEmpty {
                                 editorialTextSection(title: "Хук (Заголовок)", bodyText: hook, field: .hook)
                             }
-                            
                             if let mainText = project.mainText, !mainText.isEmpty {
                                 editorialTextSection(title: project.type == .stories ? "Сценарий (Stories)" : "Основной текст", bodyText: mainText, field: .mainText)
                             }
-                            
                             if let cta = project.cta, !cta.isEmpty {
                                 editorialTextSection(title: "Призыв к действию", bodyText: cta, field: .cta)
                             }
-                            
                             if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
                                 editorialTextSection(title: "Короткая версия", bodyText: shortVersion, field: .shortVersion)
                             }
-                            
                             if let caption = project.caption, !caption.isEmpty {
                                 editorialTextSection(title: "Описание (Caption)", bodyText: caption, field: .caption)
                             }
-                            
                             if let hashtags = project.hashtags, !hashtags.isEmpty {
                                 hashtagsSection(hashtags)
                             }
-                            
-                            // Carousel specific
                             if !sortedSlides.isEmpty {
                                 editorialSlidesSection(sortedSlides)
                             }
-                            
-                            // Video specific
                             if let scriptBeats = project.scriptBeats, !scriptBeats.isEmpty {
                                 editorialTextSection(title: "Сценарий (Блоки)", bodyText: scriptBeats, field: .scriptBeats)
                             }
@@ -162,15 +151,13 @@ struct ContentProjectDetailView: View {
                             }
                         }
                         
-                        Spacer(minLength: 80) // Bottom bar padding
+                        Spacer(minLength: 80)
                     }
                     .padding(.bottom, 60)
                 }
-                .background(Color.kadroIvory)
+                .background(Color.kadroBackground(for: colorScheme))
                 
-                // Floating Bottom Action Bar
                 floatingActionBar
-                
             }
             .navigationBarHidden(true)
             .sheet(item: $latestResult) { result in
@@ -186,9 +173,7 @@ struct ContentProjectDetailView: View {
             }
             .sheet(item: $visualPromptRequest) { request in
                 VisualPromptInputSheet(title: request.title, promptText: $visualPromptText) {
-                    Task {
-                        await handlePromptGeneration(request)
-                    }
+                    Task { await handlePromptGeneration(request) }
                 }
             }
             .alert(
@@ -217,49 +202,44 @@ struct ContentProjectDetailView: View {
     
     private var heroHeader: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Top Nav
             HStack {
                 Button {
                     dismiss()
                 } label: {
                     Image(systemName: "arrow.left")
                         .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(.kadroCharcoal)
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
                         .frame(width: 44, height: 44)
-                        .background(Color.kadroSoftWhite)
+                        .background(Color.kadroCard(for: colorScheme))
                         .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.kadroSand, lineWidth: 0.5))
+                        .overlay(Circle().stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5))
                 }
                 Spacer()
-                
-                // Badges
                 HStack(spacing: 8) {
                     KadroStatusBadge(title: project.type.rawValue.uppercased(), color: .kadroWarmGray)
                     KadroStatusBadge(title: project.status.rawValue, color: statusColor(for: project.status))
                 }
             }
             
-            // Title
             Text(project.title.isEmpty ? "Без названия" : project.title)
                 .font(.custom("New York", size: 36).weight(.bold))
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
                 .lineSpacing(4)
             
             Text(project.updatedAt.formatted(date: .long, time: .shortened))
                 .font(.custom("New York", size: 14))
-                .foregroundColor(.kadroWarmGray)
+                .foregroundColor(.kadroSecondary(for: colorScheme))
                 .italic()
         }
         .padding(.horizontal, 24)
         .padding(.top, 16)
     }
     
-    // MARK: - Visual Section (Hero Image)
+    // MARK: - Visual Section
     
     @ViewBuilder
     private var visualHeaderSection: some View {
         if let asset = coverPreviewAsset {
-            // Show large image
             VStack(spacing: 12) {
                 KadroPreviewableGeneratedImage(asset: asset, cornerRadius: 24)
                     .padding(.horizontal, 24)
@@ -273,17 +253,16 @@ struct ContentProjectDetailView: View {
                         Text(coverButtonTitle)
                     }
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.kadroCharcoal)
+                    .foregroundColor(.kadroPrimary(for: colorScheme))
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .background(Color.kadroSoftWhite)
+                    .background(Color.kadroCard(for: colorScheme))
                     .clipShape(Capsule())
-                    .overlay(Capsule().stroke(Color.kadroSand, lineWidth: 0.5))
+                    .overlay(Capsule().stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5))
                 }
                 .disabled(isGeneratingVisual)
             }
         } else if selectedStylePackReferenceCount > 0 {
-            // Show generator CTA
             Button {
                 visualPromptText = project.generatedCoverImagePrompt ?? ""
                 visualPromptRequest = DetailVisualPromptRequest(target: .cover, title: coverButtonTitle)
@@ -291,16 +270,16 @@ struct ContentProjectDetailView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "photo.badge.plus")
                         .font(.system(size: 28, weight: .light))
-                        .foregroundColor(.kadroWarmGray)
+                        .foregroundColor(.kadroSecondary(for: colorScheme))
                     Text("Сгенерировать обложку (AI)")
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.kadroCharcoal)
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 180)
-                .background(Color.kadroSoftWhite)
+                .background(Color.kadroCard(for: colorScheme))
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.kadroSand, style: StrokeStyle(lineWidth: 1, dash: [6])))
+                .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.kadroBorderColor(for: colorScheme), style: StrokeStyle(lineWidth: 1, dash: [6])))
                 .padding(.horizontal, 24)
             }
             .buttonStyle(.plain)
@@ -312,16 +291,14 @@ struct ContentProjectDetailView: View {
     
     private func editorialTextSection(title: String, bodyText: String, field: EditableTextField) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Section Header
             HStack(alignment: .bottom) {
                 Text(title.uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.5)
-                    .foregroundColor(.kadroWarmGray)
+                    .foregroundColor(.kadroSecondary(for: colorScheme))
                 
                 Spacer()
                 
-                // Inline Tools
                 HStack(spacing: 16) {
                     Button {
                         UIPasteboard.general.string = bodyText
@@ -332,7 +309,7 @@ struct ContentProjectDetailView: View {
                     } label: {
                         Image(systemName: copiedFieldID == field ? "checkmark" : "doc.on.doc")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(copiedFieldID == field ? .kadroSuccess : .kadroWarmGray)
+                            .foregroundColor(copiedFieldID == field ? .kadroSuccess : .kadroSecondary(for: colorScheme))
                     }
                     
                     Button {
@@ -340,17 +317,17 @@ struct ContentProjectDetailView: View {
                     } label: {
                         Image(systemName: "pencil")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.kadroWarmGray)
+                            .foregroundColor(.kadroSecondary(for: colorScheme))
                     }
                 }
             }
             
-            // Text Content (No card backgrounds, editorial look)
             Text(bodyText)
                 .font(.custom("New York", size: 18).weight(.regular))
                 .lineSpacing(6)
-                .foregroundColor(.kadroCharcoal)
+                .foregroundColor(.kadroPrimary(for: colorScheme))
                 .multilineTextAlignment(.leading)
+                .textSelection(.enabled)
         }
         .padding(.horizontal, 24)
     }
@@ -360,7 +337,7 @@ struct ContentProjectDetailView: View {
             Text("ХЭШТЕГИ")
                 .font(.system(size: 11, weight: .bold))
                 .tracking(1.5)
-                .foregroundColor(.kadroWarmGray)
+                .foregroundColor(.kadroSecondary(for: colorScheme))
                 .padding(.horizontal, 24)
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -368,18 +345,17 @@ struct ContentProjectDetailView: View {
                     ForEach(hashtags.split(separator: " ").map(String.init), id: \.self) { hashtag in
                         Text(hashtag)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.kadroCharcoal)
+                            .foregroundColor(.kadroPrimary(for: colorScheme))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
-                            .background(Color.kadroSoftWhite)
+                            .background(Color.kadroCard(for: colorScheme))
                             .clipShape(Capsule())
-                            .overlay(Capsule().stroke(Color.kadroSand, lineWidth: 0.5))
+                            .overlay(Capsule().stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5))
                     }
                 }
                 .padding(.horizontal, 24)
             }
             
-            // Copy tags inline
             Button {
                 UIPasteboard.general.string = hashtags
             } label: {
@@ -388,14 +364,14 @@ struct ContentProjectDetailView: View {
                     Text("Скопировать всё")
                 }
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.kadroWarmGray)
+                .foregroundColor(.kadroSecondary(for: colorScheme))
             }
             .padding(.horizontal, 24)
             .padding(.top, 4)
         }
     }
     
-    // MARK: - Bento Carousel Slides
+    // MARK: - Carousel Slides
     
     private func editorialSlidesSection(_ slides: [CarouselSlide]) -> some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -403,7 +379,7 @@ struct ContentProjectDetailView: View {
                 Text("СЛАЙДЫ КАРУСЕЛИ")
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.5)
-                    .foregroundColor(.kadroWarmGray)
+                    .foregroundColor(.kadroSecondary(for: colorScheme))
                 
                 Spacer()
                 
@@ -411,7 +387,7 @@ struct ContentProjectDetailView: View {
                     KadroDownloadGeneratedImagesButton(assets: generatedSlidePreviewAssets, isDisabled: isGeneratingVisual) { isDownloading in
                         Image(systemName: isDownloading ? "arrow.down.circle.fill" : "square.and.arrow.down")
                             .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.kadroCharcoal)
+                            .foregroundColor(.kadroPrimary(for: colorScheme))
                     }
                 }
                 
@@ -420,7 +396,7 @@ struct ContentProjectDetailView: View {
                 } label: {
                     Image(systemName: "wand.and.stars")
                         .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.kadroCharcoal)
+                        .foregroundColor(.kadroPrimary(for: colorScheme))
                 }
                 .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
                 .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.5 : 1)
@@ -434,20 +410,19 @@ struct ContentProjectDetailView: View {
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 16) // For slight shadow
+                .padding(.bottom, 16)
             }
         }
     }
     
     private func bentoSlideCard(_ slide: CarouselSlide) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Visual Area
             if let asset = slidePreviewAsset(for: slide) {
                 KadroPreviewableGeneratedImage(asset: asset, cornerRadius: 20)
                     .padding(8)
             } else {
                 ZStack {
-                    Color.kadroIvory
+                    Color.kadroBackground(for: colorScheme)
                     
                     Button {
                         visualPromptText = slide.generatedImagePrompt ?? ""
@@ -462,7 +437,7 @@ struct ContentProjectDetailView: View {
                             Text("AI Visual")
                                 .font(.system(size: 12, weight: .medium))
                         }
-                        .foregroundColor(.kadroWarmGray)
+                        .foregroundColor(.kadroSecondary(for: colorScheme))
                     }
                     .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
                 }
@@ -471,22 +446,21 @@ struct ContentProjectDetailView: View {
                 .padding(8)
             }
             
-            // Text Area
             VStack(alignment: .leading, spacing: 8) {
                 Text("Слайд \(slide.order)")
                     .font(.system(size: 10, weight: .bold))
                     .tracking(1)
-                    .foregroundColor(.kadroWarmGray)
+                    .foregroundColor(.kadroSecondary(for: colorScheme))
                 
                 Text(slide.headline)
                     .font(.custom("New York", size: 16).weight(.semibold))
-                    .foregroundColor(.kadroCharcoal)
+                    .foregroundColor(.kadroPrimary(for: colorScheme))
                     .lineLimit(2)
                 
                 if !slide.bodyText.isEmpty {
                     Text(slide.bodyText)
                         .font(.system(size: 13, weight: .regular))
-                        .foregroundColor(.kadroCharcoal.opacity(0.8))
+                        .foregroundColor(.kadroSecondary(for: colorScheme))
                         .lineLimit(3)
                 }
                 
@@ -495,9 +469,9 @@ struct ContentProjectDetailView: View {
             .padding(16)
         }
         .frame(width: 240, height: 380)
-        .background(Color.kadroSoftWhite)
+        .background(Color.kadroCard(for: colorScheme))
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.kadroSand, lineWidth: 0.5))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5))
     }
     
     // MARK: - Floating Bottom Bar
@@ -518,8 +492,6 @@ struct ContentProjectDetailView: View {
                 .frame(height: 56)
                 .background(Color.kadroLime)
                 .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.kadroSand, lineWidth: 0.5))
-                // Beautiful inner shadow effect native to the style
                 .shadow(color: Color.kadroLime.opacity(0.4), radius: 16, y: 8)
             }
             .buttonStyle(.plain)
@@ -530,13 +502,13 @@ struct ContentProjectDetailView: View {
         .padding(.vertical, 16)
         .background(
             Rectangle()
-                .fill(Color.kadroIvory.opacity(0.8))
+                .fill(Color.kadroBackground(for: colorScheme).opacity(0.92))
                 .ignoresSafeArea()
                 .backdropFilter()
         )
     }
 
-    // MARK: - Overlays
+    // MARK: - Loading Overlay
     
     private var loadingOverlay: some View {
         ZStack {
@@ -547,30 +519,30 @@ struct ContentProjectDetailView: View {
             VStack(spacing: 20) {
                 ProgressView()
                     .scaleEffect(1.5)
-                    .tint(.kadroCharcoal)
+                    .tint(.kadroPrimary(for: colorScheme))
                 Text(isGeneratingVisual ? visualLoadingTitle : "Переписываем историю")
                     .font(.custom("New York", size: 24).weight(.medium))
-                    .foregroundColor(.kadroCharcoal)
+                    .foregroundColor(.kadroPrimary(for: colorScheme))
                 Text(isGeneratingVisual ? visualLoadingSubtitle : "ИИ создает новую комбинацию...")
                     .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(.kadroWarmGray)
+                    .foregroundColor(.kadroSecondary(for: colorScheme))
                     .multilineTextAlignment(.center)
             }
             .padding(40)
-            .background(Color.kadroIvory)
+            .background(Color.kadroCard(for: colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
-            .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
+            .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
         }
     }
     
-    // MARK: - Logic & Properties
+    // MARK: - Helpers
     
     private var coverPreviewAsset: KadroPreviewImageAsset? {
         guard let data = project.generatedCoverImageData else { return nil }
         return KadroPreviewImageAsset(
             id: "project-cover-\(project.id.uuidString)",
             title: project.title.isEmpty ? "Cover" : project.title,
-            subtitle: nil, // Removed ugly meta
+            subtitle: nil,
             filenameStem: "kadro-\(project.title.isEmpty ? "cover" : project.title)-cover",
             imageData: data
         )
@@ -588,10 +560,7 @@ struct ContentProjectDetailView: View {
     }
     
     private var coverButtonTitle: String {
-        if isInstagramPost {
-            return project.generatedCoverImageData == nil ? "Создать обложку поста" : "Изменить обложку"
-        }
-        return project.generatedCoverImageData == nil ? "Создать обложку" : "Изменить обложку"
+        project.generatedCoverImageData == nil ? "Создать обложку (AI)" : "Изменить обложку"
     }
     
     private func statusColor(for status: ContentStatus) -> Color {
@@ -632,10 +601,10 @@ struct ContentProjectDetailView: View {
             errorMessage = "Нет изначальной идеи для регенерации"
             return
         }
-
+        
         isRegenerating = true
         errorMessage = nil
-
+        
         let context = KadroGenerationContext(
             inputSource: "Regeneration",
             rawInput: trimmedInput,
@@ -722,7 +691,7 @@ struct ContentProjectDetailView: View {
         for (index, slide) in slides.enumerated() {
             visualLoadingTitle = "Магия карусели"
             visualLoadingSubtitle = "Рисуем слайд \(index + 1) из \(slides.count)"
-
+            
             do {
                 let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile)
                 try persistGeneratedVisual(response, target: .slide(slide.id))
@@ -749,7 +718,7 @@ struct ContentProjectDetailView: View {
         guard let imageData = styleImageService.imageData(from: result.imageDataURL) else {
             throw NSError(domain: "KadroStyleImageService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Не удалось сохранить фото"])
         }
-
+        
         switch target {
         case .cover:
             project.generatedCoverImageData = imageData
@@ -776,9 +745,6 @@ struct ContentProjectDetailView: View {
         try modelContext.save()
     }
 }
-
-// MARK: - TextEditSheet Mock (Assumed to exist in codebase)
-// If it doesn't, ensure you have the actual `TextEditSheet` struct or add it.
 
 #Preview {
     NavigationStack {
