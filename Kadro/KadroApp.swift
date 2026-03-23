@@ -11,7 +11,7 @@ import SwiftData
 @main
 struct KadroApp: App {
     @State private var appState = AppState()
-    
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             ContentProject.self,
@@ -29,9 +29,25 @@ struct KadroApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            RootView()
                 .environment(appState)
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+// MARK: - Root View (handles onboarding gate)
+
+struct RootView: View {
+    @Environment(AppState.self) private var appState
+
+    var body: some View {
+        if appState.hasCompletedOnboarding {
+            MainTabView()
+                .transition(.opacity)
+        } else {
+            OnboardingView()
+                .transition(.opacity)
+        }
     }
 }

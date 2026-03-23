@@ -1351,13 +1351,13 @@ Make it feel like **the** modern iPhone content studio.
 
 ---
 
-### 🔲 What is left to complete Sprint 3
+### ✅ What is left to complete Sprint 3
 
-- [ ] **Onboarding flow** — 5-screen onboarding sequence (value → user type → content goals → style → first win) as described in section 8.10
-- [ ] **Conditional onboarding** — Update `KadroApp.swift` to show onboarding on first launch, then main tab view
-- [ ] **Build verification** — Confirm the project compiles cleanly on iOS Simulator
-- [ ] **Remove template files** — Delete unused `ContentView.swift` and `Item.swift`
-- [ ] **Settings screen** — Basic settings placeholder (account, subscription, support)
+- [x] **Onboarding flow** — `Kadro/Features/Onboarding/OnboardingView.swift` — 5-screen sequence (Value → Who are you → What to create → Your style → First win), with progress dots, back/next navigation, and brand profile saved to SwiftData on completion
+- [x] **Conditional onboarding** — `KadroApp.swift` updated with `RootView` that gates on `appState.hasCompletedOnboarding`
+- [x] **Build verification** — Project builds cleanly on iPhone 17 Pro simulator (iOS 26.2) — **BUILD SUCCEEDED**
+- [x] **Remove template files** — Deleted unused `ContentView.swift` and `Item.swift`
+- [x] **Settings screen** — `Kadro/Features/Settings/SettingsView.swift` — account, subscription, language, notifications, export, connections, support, app info; accessible via gear icon in HomeView toolbar; includes "Reset onboarding" option
 
 ---
 
@@ -1368,7 +1368,7 @@ Make it feel like **the** modern iPhone content studio.
 | Sprint 0 | Product framing & system definition | ✅ Complete |
 | Sprint 1 | UX foundation & low-fi flows | ✅ Complete |
 | Sprint 2 | Visual system & high-fidelity design | ✅ Complete |
-| Sprint 3 | Native iOS shell & design system | 🟡 In Progress (~85%) |
+| Sprint 3 | Native iOS shell & design system | ✅ Complete |
 | Sprint 4 | Create flow & AI generation layer | 🔲 Not started |
 | Sprint 5 | Editors and refinement tools | 🔲 Not started |
 | Sprint 6 | Library, Calendar, Brand integration | 🔲 Not started |

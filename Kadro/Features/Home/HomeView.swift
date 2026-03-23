@@ -12,7 +12,8 @@ struct HomeView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ContentProject.updatedAt, order: .reverse) private var projects: [ContentProject]
-    
+    @State private var showSettings = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -29,6 +30,21 @@ struct HomeView: View {
             .background(Color.kadroIvory)
             .navigationTitle("Главная")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundColor(.kadroCharcoal)
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
+                    .environment(appState)
+            }
         }
     }
     
