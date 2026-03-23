@@ -72,6 +72,7 @@ struct CreateFlowView: View {
     @State private var selectedOutputType: ContentType = .post
     @State private var selectedTone: ContentTone?
     @State private var selectedGoal: ContentGoal?
+    @State private var selectedStylePackID: String = StylePackLibrary.packs.first?.id ?? ""
     @State private var isGenerating = false
     @State private var isTranscribingVoiceNote = false
     @State private var appErrorMessage: String?
@@ -80,6 +81,7 @@ struct CreateFlowView: View {
     @State private var lastTranscription: KadroVoiceTranscriptionResponse?
     
     private let aiService = KadroAIService()
+    private let stylePacks = StylePackLibrary.packs
     private let transcriptionService = KadroVoiceTranscriptionService()
     
     private var primaryButtonTitle: String {
@@ -93,7 +95,7 @@ struct CreateFlowView: View {
         case .enterContent:
             return !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isTranscribingVoiceNote
         case .chooseOutput:
-            return !isGenerating
+            return !isGenerating && !selectedStylePackID.isEmpty
         }
     }
     
@@ -538,24 +540,7 @@ struct CreateFlowView: View {
                 }
             }
             
-            if let stylePack = StylePackLibrary.pack(for: profiles.first?.selectedStylePackID) {
-                KadroCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Выбранный style pack")
-                            .font(.kadroFootnote)
-                            .foregroundColor(.kadroWarmGray)
-                        Text(stylePack.displayName)
-                            .font(.kadroBodyMedium)
-                            .foregroundColor(.kadroCharcoal)
-                        Text(stylePack.shortDescription)
-                            .font(.kadroCallout)
-                            .foregroundColor(.kadroWarmGray)
-                        Text(stylePack.referenceFolder)
-                            .font(.kadroCaption)
-                            .foregroundColor(.kadroWarmGray)
-                    }
-                }
-            }
+            stylePackPickerSection
             
             KadroCard {
                 VStack(alignment: .leading, spacing: 10) {
@@ -571,6 +556,49 @@ struct CreateFlowView: View {
                     Text("Cheap ops: openai/gpt-5.4-nano · Image: google/gemini-3.1-flash-image-preview · Candidate: bytedance/seed-2.0-lite")
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
+                }
+            }
+        }
+    }
+    
+    private var stylePackPickerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Стиль визуала")
+                .font(.kadroTitle3)
+                .foregroundColor(.kadroCharcoal)
+            
+            Text("Выберите style pack прямо здесь. После генерации вы увидите visual preview в результате и сможете там же перегенерировать.")
+                .font(.kadroCallout)
+                .foregroundColor(.kadroWarmGray)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(stylePacks, id: \.id) { pack in
+                        Button {
+                            selectedStylePackID = pack.id
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(pack.displayName)
+                                    .font(.kadroBodyMedium)
+                                    .foregroundColor(.kadroCharcoal)
+                                Text(pack.shortDescription)
+                                    .font(.kadroFootnote)
+                                    .foregroundColor(.kadroWarmGray)
+                                    .lineLimit(3)
+                                Text("Refs: \(StylePackReferenceLoader.referenceCount(for: pack.id))")
+                                    .font(.kadroCaption)
+                                    .foregroundColor(.kadroWarmGray)
+                            }
+                            .padding(12)
+                            .frame(width: 220, alignment: .leading)
+                            .background(Color.kadroSoftWhite)
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(selectedStylePackID == pack.id ? Color.kadroLime : Color.kadroSand.opacity(0.6), lineWidth: selectedStylePackID == pack.id ? 2 : 1)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -684,6 +712,8 @@ struct CreateFlowView: View {
         do {
             let payload = try await aiService.generateContent(context: context)
             let project = ContentProject.makeFromGeneration(context: context, payload: payload)
+            project.selectedStylePackID = selectedStylePackID
+            project.selectedStylePackName = StylePackLibrary.pack(for: selectedStylePackID)?.displayName
             modelContext.insert(project)
             try modelContext.save()
             latestResult = GeneratedContentResult(project: project, payload: payload)
@@ -697,6 +727,9 @@ struct CreateFlowView: View {
     }
     
     private func applyDraftIfNeeded() {
+        if selectedStylePackID.isEmpty {
+            selectedStylePackID = stylePacks.first?.id ?? ""
+        }
         guard let draft = appState.consumeCreateDraft() else { return }
         if let outputType = draft.outputType {
             selectedOutputType = outputType

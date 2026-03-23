@@ -79,6 +79,8 @@ final class ContentProject {
     var platform: ContentPlatform
     var tone: ContentTone?
     var goal: ContentGoal?
+    var selectedStylePackID: String?
+    var selectedStylePackName: String?
     
     // Post content
     var hook: String?
@@ -92,6 +94,15 @@ final class ContentProject {
     var onScreenText: String?
     var caption: String?
     var coverIdea: String?
+    
+    // Generated visuals
+    @Attribute(.externalStorage) var generatedCoverImageData: Data?
+    var generatedCoverImagePrompt: String?
+    var generatedCoverImageModel: String?
+    var generatedCoverImageStylePackID: String?
+    var generatedCoverImageReferenceFilenames: String?
+    var generatedCoverImageVisualKind: String?
+    var generatedCoverImageUpdatedAt: Date?
     
     // Scheduling
     var scheduledDate: Date?
@@ -117,6 +128,15 @@ final class ContentProject {
         self.type = type
         self.status = status
         self.platform = platform
+        self.selectedStylePackID = nil
+        self.selectedStylePackName = nil
+        self.generatedCoverImageData = nil
+        self.generatedCoverImagePrompt = nil
+        self.generatedCoverImageModel = nil
+        self.generatedCoverImageStylePackID = nil
+        self.generatedCoverImageReferenceFilenames = nil
+        self.generatedCoverImageVisualKind = nil
+        self.generatedCoverImageUpdatedAt = nil
         self.createdAt = Date()
         self.updatedAt = Date()
         self.slides = []
@@ -134,6 +154,13 @@ final class CarouselSlide {
     var ctaText: String?
     var layoutStyle: SlideLayout
     var visualStyle: SlideVisualStyle
+    @Attribute(.externalStorage) var generatedImageData: Data?
+    var generatedImagePrompt: String?
+    var generatedImageModel: String?
+    var generatedImageStylePackID: String?
+    var generatedImageReferenceFilenames: String?
+    var generatedImageVisualKind: String?
+    var generatedImageUpdatedAt: Date?
     
     @Relationship(inverse: \ContentProject.slides)
     var project: ContentProject?
@@ -153,6 +180,13 @@ final class CarouselSlide {
         self.ctaText = ctaText
         self.layoutStyle = layoutStyle
         self.visualStyle = visualStyle
+        self.generatedImageData = nil
+        self.generatedImagePrompt = nil
+        self.generatedImageModel = nil
+        self.generatedImageStylePackID = nil
+        self.generatedImageReferenceFilenames = nil
+        self.generatedImageVisualKind = nil
+        self.generatedImageUpdatedAt = nil
     }
 }
 

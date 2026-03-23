@@ -135,6 +135,8 @@ Deno.serve(async (req) => {
       prompt_version: PROMPT_VERSION,
       style_pack_id: stylePackID,
       reference_count: references.length,
+      reference_filenames: references.map((reference) => reference.filename ?? ''),
+      visual_kind: body.visual_kind ?? 'cover',
       prompt_used: prompt,
     })
   } catch (error) {

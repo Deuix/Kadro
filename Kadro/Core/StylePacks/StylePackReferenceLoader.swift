@@ -10,18 +10,7 @@ struct StylePackReferenceAsset: Identifiable, Hashable {
 
 enum StylePackReferenceLoader {
     static func referenceAssets(for packID: String, limit: Int = 4) throws -> [StylePackReferenceAsset] {
-        let prefix = packID.lowercased() + "_"
-        let allowedExtensions = Set(["jpg", "jpeg", "png", "webp"])
-        
-        let urls = (Bundle.main.urls(forResourcesWithExtension: nil, subdirectory: nil) ?? [])
-            .filter { url in
-                let ext = url.pathExtension.lowercased()
-                return allowedExtensions.contains(ext) && url.lastPathComponent.lowercased().hasPrefix(prefix)
-            }
-            .sorted { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
-            .prefix(limit)
-        
-        return try urls.map { url in
+        try resourceURLs(for: packID, limit: limit).map { url in
             let data = try Data(contentsOf: url)
             let mimeType = mimeType(forExtension: url.pathExtension)
             return StylePackReferenceAsset(
@@ -35,14 +24,35 @@ enum StylePackReferenceLoader {
     }
     
     static func referenceCount(for packID: String) -> Int {
+        (try? resourceURLs(for: packID, limit: nil).count) ?? 0
+    }
+    
+    private static func resourceURLs(for packID: String, limit: Int?) throws -> [URL] {
         let prefix = packID.lowercased() + "_"
         let allowedExtensions = Set(["jpg", "jpeg", "png", "webp"])
-        return (Bundle.main.urls(forResourcesWithExtension: nil, subdirectory: nil) ?? [])
-            .filter { url in
-                let ext = url.pathExtension.lowercased()
-                return allowedExtensions.contains(ext) && url.lastPathComponent.lowercased().hasPrefix(prefix)
+        guard let resourceRoot = Bundle.main.resourceURL else { return [] }
+        
+        let enumerator = FileManager.default.enumerator(
+            at: resourceRoot,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        )
+        
+        var matches: [URL] = []
+        while let url = enumerator?.nextObject() as? URL {
+            let ext = url.pathExtension.lowercased()
+            guard allowedExtensions.contains(ext) else { continue }
+            if url.lastPathComponent.lowercased().hasPrefix(prefix) {
+                matches.append(url)
             }
-            .count
+        }
+        
+        matches.sort { $0.lastPathComponent.localizedStandardCompare($1.lastPathComponent) == .orderedAscending }
+        
+        if let limit {
+            return Array(matches.prefix(limit))
+        }
+        return matches
     }
     
     private static func mimeType(forExtension ext: String) -> String {

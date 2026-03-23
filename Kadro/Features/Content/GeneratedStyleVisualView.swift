@@ -7,6 +7,8 @@ import AppKit
 
 struct GeneratedStyleVisualView: View {
     let result: KadroGeneratedStyleImageResponse
+    var useButtonTitle: String? = nil
+    var onUse: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -15,6 +17,21 @@ struct GeneratedStyleVisualView: View {
                 VStack(spacing: 20) {
                     if let image = platformImage {
                         imageView(image)
+                    }
+                    
+                    if let useButtonTitle, let onUse {
+                        Button {
+                            onUse()
+                            dismiss()
+                        } label: {
+                            Text(useButtonTitle)
+                                .font(.kadroButton)
+                                .foregroundColor(.kadroCharcoal)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Color.kadroLime)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
                     }
                     
                     KadroCard {

@@ -31,8 +31,8 @@ struct MainTabView: View {
                 CalendarView()
             }
             
-            Tab(TabItem.brand.title, systemImage: TabItem.brand.icon, value: .brand) {
-                BrandView()
+            Tab(TabItem.profile.title, systemImage: TabItem.profile.icon, value: .profile) {
+                SettingsView()
             }
         }
         .tint(.kadroLime)

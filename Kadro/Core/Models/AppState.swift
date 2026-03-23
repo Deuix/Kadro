@@ -56,7 +56,7 @@ enum TabItem: Int, CaseIterable, Identifiable {
     case create = 1
     case content = 2
     case calendar = 3
-    case brand = 4
+    case profile = 4
     
     var id: Int { rawValue }
     
@@ -66,7 +66,7 @@ enum TabItem: Int, CaseIterable, Identifiable {
         case .create: return "Создать"
         case .content: return "Контент"
         case .calendar: return "Календарь"
-        case .brand: return "Бренд"
+        case .profile: return "Профиль"
         }
     }
     
@@ -76,7 +76,7 @@ enum TabItem: Int, CaseIterable, Identifiable {
         case .create: return "plus.circle.fill"
         case .content: return "doc.text"
         case .calendar: return "calendar"
-        case .brand: return "paintbrush"
+        case .profile: return "person.crop.circle"
         }
     }
     
@@ -86,7 +86,7 @@ enum TabItem: Int, CaseIterable, Identifiable {
         case .create: return "plus.circle.fill"
         case .content: return "doc.text.fill"
         case .calendar: return "calendar"
-        case .brand: return "paintbrush.fill"
+        case .profile: return "person.crop.circle.fill"
         }
     }
 }

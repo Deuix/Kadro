@@ -1,5 +1,10 @@
 import Foundation
 
+enum KadroStyleVisualTarget: Hashable {
+    case cover
+    case slide(UUID)
+}
+
 struct KadroStyleImageRequest: Encodable {
     let projectTitle: String
     let rawInput: String
@@ -28,9 +33,36 @@ struct KadroGeneratedStyleImageResponse: Decodable, Identifiable {
     let promptVersion: String
     let stylePackID: String
     let referenceCount: Int
+    let referenceFilenames: [String]
+    let visualKind: String
     let promptUsed: String
     
-    var id: String { openrouterRequestID + stylePackID }
+    var id: String { openrouterRequestID + stylePackID + visualKind }
+    
+    private enum CodingKeys: String, CodingKey {
+        case imageDataURL = "image_data_url"
+        case model = "model"
+        case openrouterRequestID = "openrouter_request_id"
+        case promptVersion = "prompt_version"
+        case stylePackID = "style_pack_id"
+        case referenceCount = "reference_count"
+        case referenceFilenames = "reference_filenames"
+        case visualKind = "visual_kind"
+        case promptUsed = "prompt_used"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.imageDataURL = try container.decode(String.self, forKey: .imageDataURL)
+        self.model = try container.decodeIfPresent(String.self, forKey: .model) ?? ""
+        self.openrouterRequestID = try container.decodeIfPresent(String.self, forKey: .openrouterRequestID) ?? UUID().uuidString
+        self.promptVersion = try container.decodeIfPresent(String.self, forKey: .promptVersion) ?? ""
+        self.stylePackID = try container.decodeIfPresent(String.self, forKey: .stylePackID) ?? ""
+        self.referenceCount = try container.decodeIfPresent(Int.self, forKey: .referenceCount) ?? 0
+        self.referenceFilenames = try container.decodeIfPresent([String].self, forKey: .referenceFilenames) ?? []
+        self.visualKind = try container.decodeIfPresent(String.self, forKey: .visualKind) ?? "cover"
+        self.promptUsed = try container.decodeIfPresent(String.self, forKey: .promptUsed) ?? ""
+    }
 }
 
 final class KadroStyleImageService {
@@ -43,11 +75,28 @@ final class KadroStyleImageService {
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
         self.encoder.keyEncodingStrategy = .convertToSnakeCase
-        self.decoder.keyDecodingStrategy = .convertFromSnakeCase
     }
     
     func generateCoverVisual(project: ContentProject, brandProfile: BrandProfile?) async throws -> KadroGeneratedStyleImageResponse {
-        guard let stylePack = resolvedStylePack(from: brandProfile) else {
+        try await generateVisual(project: project, slide: nil, brandProfile: brandProfile)
+    }
+    
+    func generateSlideVisual(project: ContentProject, slide: CarouselSlide, brandProfile: BrandProfile?) async throws -> KadroGeneratedStyleImageResponse {
+        try await generateVisual(project: project, slide: slide, brandProfile: brandProfile)
+    }
+    
+    func imageData(from dataURL: String) -> Data? {
+        guard let commaIndex = dataURL.firstIndex(of: ",") else { return nil }
+        let base64 = String(dataURL[dataURL.index(after: commaIndex)...])
+        return Data(base64Encoded: base64)
+    }
+    
+    private func generateVisual(
+        project: ContentProject,
+        slide: CarouselSlide?,
+        brandProfile: BrandProfile?
+    ) async throws -> KadroGeneratedStyleImageResponse {
+        guard let stylePack = resolvedStylePack(project: project, brandProfile: brandProfile) else {
             throw KadroStyleImageServiceError.missingStylePack
         }
         
@@ -56,14 +105,15 @@ final class KadroStyleImageService {
             throw KadroStyleImageServiceError.missingReferences(stylePack.displayName)
         }
         
-        let primaryText = resolvedPrimaryText(for: project)
-        let secondaryText = project.cta ?? project.caption ?? ""
+        let primaryText = resolvedPrimaryText(for: project, slide: slide)
+        let secondaryText = resolvedSecondaryText(for: project, slide: slide)
+        let visualKind = slide == nil ? "cover" : slideVisualKind(for: slide!)
         
         let requestBody = KadroStyleImageRequest(
             projectTitle: project.title,
             rawInput: project.rawInput,
             outputType: project.type.apiValue,
-            visualKind: "cover",
+            visualKind: visualKind,
             aspectRatio: aspectRatio(for: project.type),
             primaryText: primaryText,
             secondaryText: secondaryText,
@@ -97,14 +147,20 @@ final class KadroStyleImageService {
         }
     }
     
-    private func resolvedStylePack(from profile: BrandProfile?) -> StylePack? {
-        if let selected = StylePackLibrary.pack(for: profile?.selectedStylePackID) {
+    private func resolvedStylePack(project: ContentProject, brandProfile: BrandProfile?) -> StylePack? {
+        if let selected = StylePackLibrary.pack(for: project.selectedStylePackID) {
+            return selected
+        }
+        if let selected = StylePackLibrary.pack(for: brandProfile?.selectedStylePackID) {
             return selected
         }
         return StylePackLibrary.packs.first
     }
     
-    private func resolvedPrimaryText(for project: ContentProject) -> String {
+    private func resolvedPrimaryText(for project: ContentProject, slide: CarouselSlide?) -> String {
+        if let slide, !slide.headline.isEmpty {
+            return slide.headline
+        }
         if let hook = project.hook, !hook.isEmpty {
             return hook
         }
@@ -112,6 +168,28 @@ final class KadroStyleImageService {
             return project.title
         }
         return project.rawInput
+    }
+    
+    private func resolvedSecondaryText(for project: ContentProject, slide: CarouselSlide?) -> String {
+        if let slide {
+            if !slide.bodyText.isEmpty {
+                return slide.bodyText
+            }
+            if let cta = slide.ctaText, !cta.isEmpty {
+                return cta
+            }
+        }
+        return project.cta ?? project.caption ?? ""
+    }
+    
+    private func slideVisualKind(for slide: CarouselSlide) -> String {
+        if let cta = slide.ctaText, !cta.isEmpty {
+            return "cta_slide"
+        }
+        if slide.bodyText.count > 120 {
+            return "text_heavy_slide"
+        }
+        return "quote_card"
     }
     
     private func aspectRatio(for type: ContentType) -> String {

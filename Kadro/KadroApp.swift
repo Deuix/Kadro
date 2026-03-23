@@ -18,12 +18,30 @@ struct KadroApp: App {
             CarouselSlide.self,
             BrandProfile.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        
+        let storeURL = makeStoreURL()
+        
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let persistentConfig = ModelConfiguration(schema: schema, url: storeURL)
+            return try ModelContainer(for: schema, configurations: [persistentConfig])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            print("⚠️ SwiftData persistent store failed to load at \(storeURL.path): \(error)")
+            
+            do {
+                try resetStoreFiles(at: storeURL)
+                let resetConfig = ModelConfiguration(schema: schema, url: storeURL)
+                let container = try ModelContainer(for: schema, configurations: [resetConfig])
+                print("✅ SwiftData store was reset and recreated successfully.")
+                return container
+            } catch {
+                print("⚠️ SwiftData store reset also failed: \(error). Falling back to in-memory store.")
+                do {
+                    let memoryConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                    return try ModelContainer(for: schema, configurations: [memoryConfig])
+                } catch {
+                    fatalError("Could not create in-memory ModelContainer: \(error)")
+                }
+            }
         }
     }()
 
@@ -49,5 +67,30 @@ struct RootView: View {
             OnboardingView()
                 .transition(.opacity)
         }
+    }
+}
+
+// MARK: - SwiftData Store Helpers
+
+private func makeStoreURL() -> URL {
+    let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    let directory = appSupport.appendingPathComponent("Kadro", isDirectory: true)
+    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    return directory.appendingPathComponent("Kadro.store")
+}
+
+private func resetStoreFiles(at storeURL: URL) throws {
+    let fileManager = FileManager.default
+    let sidecars = [
+        storeURL,
+        storeURL.appendingPathExtension("sqlite"),
+        URL(fileURLWithPath: storeURL.path + "-shm"),
+        URL(fileURLWithPath: storeURL.path + "-wal"),
+        URL(fileURLWithPath: storeURL.path + ".sqlite-shm"),
+        URL(fileURLWithPath: storeURL.path + ".sqlite-wal")
+    ]
+    
+    for url in sidecars where fileManager.fileExists(atPath: url.path) {
+        try fileManager.removeItem(at: url)
     }
 }
