@@ -305,7 +305,7 @@ struct KadroPreviewableGeneratedImage: View {
                 
                 #if canImport(UIKit)
                 imageActionButton(
-                    title: "Поделиться",
+                    title: "Экспорт",
                     systemImage: "square.and.arrow.up",
                     action: shareAsset
                 )
@@ -525,7 +525,7 @@ struct KadroGeneratedImagePreviewSheet: View {
 struct KadroDownloadGeneratedImagesButton<Label: View>: View {
     let assets: [KadroPreviewImageAsset]
     var isDisabled: Bool = false
-    @ViewBuilder var label: (_ isDownloading: Bool) -> Label
+    let label: (_ isDownloading: Bool) -> Label
     
     @State private var isDownloading = false
     @State private var feedbackTitle = "Готово"
@@ -869,12 +869,12 @@ private enum KadroGeneratedImageFileService {
             throw KadroGeneratedImageDownloadError.unreadableImage
         }
         
-        let exportURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension("tmp")
-        let finalURL = exportURL.deletingPathExtension().appendingPathExtension(asset.suggestedFilename.hasSuffix(".png") ? "png" : "png")
-        try data.write(to: finalURL, options: .atomic)
-        return KadroGeneratedImageExportFile(url: finalURL)
+        let exportURL = uniqueFileURL(
+            in: FileManager.default.temporaryDirectory,
+            preferredFilename: asset.suggestedFilename
+        )
+        try data.write(to: exportURL, options: .atomic)
+        return KadroGeneratedImageExportFile(url: exportURL)
     }
     
     static func uniqueFileURL(in directory: URL, preferredFilename: String) -> URL {
