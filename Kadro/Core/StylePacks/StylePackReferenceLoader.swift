@@ -1,4 +1,6 @@
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 
 struct StylePackReferenceAsset: Identifiable, Hashable {
     let id: String
@@ -11,14 +13,14 @@ struct StylePackReferenceAsset: Identifiable, Hashable {
 enum StylePackReferenceLoader {
     static func referenceAssets(for packID: String, limit: Int = 4) throws -> [StylePackReferenceAsset] {
         try resourceURLs(for: packID, limit: limit).map { url in
-            let data = try Data(contentsOf: url)
-            let mimeType = mimeType(forExtension: url.pathExtension)
+            let originalMimeType = mimeType(forExtension: url.pathExtension)
+            let optimizedPayload = try optimizedImagePayload(from: url, fallbackMimeType: originalMimeType)
             return StylePackReferenceAsset(
                 id: url.lastPathComponent,
                 filename: url.lastPathComponent,
                 url: url,
-                mimeType: mimeType,
-                dataURL: "data:\(mimeType);base64,\(data.base64EncodedString())"
+                mimeType: optimizedPayload.mimeType,
+                dataURL: "data:\(optimizedPayload.mimeType);base64,\(optimizedPayload.data.base64EncodedString())"
             )
         }
     }
@@ -61,6 +63,52 @@ enum StylePackReferenceLoader {
         case "png": return "image/png"
         case "webp": return "image/webp"
         default: return "application/octet-stream"
+        }
+    }
+    
+    private static func optimizedImagePayload(from url: URL, fallbackMimeType: String) throws -> (data: Data, mimeType: String) {
+        let originalData = try Data(contentsOf: url)
+        guard let source = CGImageSourceCreateWithData(originalData as CFData, nil) else {
+            return (originalData, fallbackMimeType)
+        }
+        
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: 1400,
+        ]
+        
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return (originalData, fallbackMimeType)
+        }
+        
+        let hasAlpha = cgImageHasAlpha(image)
+        let outputType = hasAlpha ? UTType.png.identifier : UTType.jpeg.identifier
+        let outputMimeType = hasAlpha ? "image/png" : "image/jpeg"
+        let destinationData = NSMutableData()
+        
+        guard let destination = CGImageDestinationCreateWithData(destinationData, outputType as CFString, 1, nil) else {
+            return (originalData, fallbackMimeType)
+        }
+        
+        let destinationOptions: [CFString: Any]? = hasAlpha
+            ? nil
+            : [kCGImageDestinationLossyCompressionQuality: 0.82]
+        
+        CGImageDestinationAddImage(destination, image, destinationOptions as CFDictionary?)
+        guard CGImageDestinationFinalize(destination) else {
+            return (originalData, fallbackMimeType)
+        }
+        
+        return (destinationData as Data, outputMimeType)
+    }
+    
+    private static func cgImageHasAlpha(_ image: CGImage) -> Bool {
+        switch image.alphaInfo {
+        case .first, .last, .premultipliedFirst, .premultipliedLast:
+            return true
+        default:
+            return false
         }
     }
 }

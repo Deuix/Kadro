@@ -1,10 +1,5 @@
 import SwiftUI
 import SwiftData
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
 
 private struct PendingGeneratedVisualPreview: Identifiable {
     let target: KadroStyleVisualTarget
@@ -12,6 +7,20 @@ private struct PendingGeneratedVisualPreview: Identifiable {
     
     var id: String {
         result.id + "-" + target.previewKey
+    }
+}
+
+private struct DetailVisualPromptRequest: Identifiable {
+    let target: KadroStyleVisualTarget
+    let title: String
+    
+    var id: String {
+        switch target {
+        case .cover:
+            return "cover"
+        case .slide(let id):
+            return "slide-\(id.uuidString)"
+        }
     }
 }
 
@@ -46,6 +55,8 @@ struct ContentProjectDetailView: View {
     @State private var errorMessage: String?
     @State private var latestResult: GeneratedContentResult?
     @State private var generatedVisualPreview: PendingGeneratedVisualPreview?
+    @State private var visualPromptRequest: DetailVisualPromptRequest?
+    @State private var visualPromptText: String = ""
     @State private var visualLoadingTitle: String = "Генерируем визуал"
     @State private var visualLoadingSubtitle: String = "Собираем reference-guided image generation prompt на основе style pack и ваших референсов."
     
@@ -70,6 +81,10 @@ struct ContentProjectDetailView: View {
     
     private var sortedSlides: [CarouselSlide] {
         (project.slides ?? []).sorted { $0.order < $1.order }
+    }
+    
+    private var generatedSlidePreviewAssets: [KadroPreviewImageAsset] {
+        sortedSlides.compactMap(slidePreviewAsset(for:))
     }
     
     var body: some View {
@@ -150,6 +165,13 @@ struct ContentProjectDetailView: View {
                 useButtonTitle: preview.target.useButtonTitle
             ) {
                 applyGeneratedVisual(preview)
+            }
+        }
+        .sheet(item: $visualPromptRequest) { request in
+            VisualPromptInputSheet(title: request.title, promptText: $visualPromptText) {
+                Task {
+                    await handlePromptGeneration(request)
+                }
             }
         }
         .alert(
@@ -233,8 +255,8 @@ struct ContentProjectDetailView: View {
                         .font(.kadroCaption)
                         .foregroundColor(.kadroWarmGray)
                     
-                    if let image = platformImage(from: project.generatedCoverImageData) {
-                        imageView(image)
+                    if let asset = coverPreviewAsset {
+                        KadroPreviewableGeneratedImage(asset: asset)
                         if let meta = coverMetaText {
                             Text(meta)
                                 .font(.kadroCaption)
@@ -243,9 +265,11 @@ struct ContentProjectDetailView: View {
                     }
                     
                     Button {
-                        Task {
-                            await generateCoverVisualDraft()
-                        }
+                        visualPromptText = project.generatedCoverImagePrompt ?? ""
+                        visualPromptRequest = DetailVisualPromptRequest(
+                            target: .cover,
+                            title: project.generatedCoverImageData == nil ? "Создать visual cover" : "Перегенерировать cover"
+                        )
                     } label: {
                         Text(project.generatedCoverImageData == nil ? "Создать visual cover" : "Перегенерировать cover")
                             .font(.kadroButton)
@@ -258,7 +282,7 @@ struct ContentProjectDetailView: View {
                     .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
                     .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.55 : 1)
                 } else {
-                    Text("Сначала выберите style pack в разделе Brand, чтобы мы могли использовать ваши references для visual generation.")
+                    Text("Сначала выберите style pack во время создания поста, чтобы мы могли использовать ваши references для visual generation.")
                         .font(.kadroCallout)
                         .foregroundColor(.kadroWarmGray)
                 }
@@ -309,6 +333,13 @@ struct ContentProjectDetailView: View {
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
                 Spacer()
+                if !generatedSlidePreviewAssets.isEmpty {
+                    KadroDownloadGeneratedImagesButton(assets: generatedSlidePreviewAssets, isDisabled: isGeneratingVisual) { isDownloading in
+                        Text(isDownloading ? "Сохраняем..." : "Скачать все")
+                            .font(.kadroFootnote)
+                            .foregroundColor(.kadroLime)
+                    }
+                }
                 Button("Все visuals") {
                     Task {
                         await generateAllSlideVisuals()
@@ -340,8 +371,8 @@ struct ContentProjectDetailView: View {
                                     .foregroundColor(.kadroCharcoal)
                             }
                             
-                            if let image = platformImage(from: slide.generatedImageData) {
-                                imageView(image)
+                            if let asset = slidePreviewAsset(for: slide) {
+                                KadroPreviewableGeneratedImage(asset: asset)
                                 if let meta = slideMetaText(slide) {
                                     Text(meta)
                                         .font(.kadroCaption)
@@ -350,9 +381,11 @@ struct ContentProjectDetailView: View {
                             }
                             
                             Button {
-                                Task {
-                                    await generateSlideVisualDraft(slide)
-                                }
+                                visualPromptText = slide.generatedImagePrompt ?? ""
+                                visualPromptRequest = DetailVisualPromptRequest(
+                                    target: .slide(slide.id),
+                                    title: slide.generatedImageData == nil ? "Создать visual для слайда" : "Перегенерировать visual"
+                                )
                             } label: {
                                 Text(slide.generatedImageData == nil ? "Создать visual для слайда" : "Перегенерировать visual")
                                     .font(.kadroFootnote)
@@ -455,7 +488,18 @@ struct ContentProjectDetailView: View {
     }
     
     @MainActor
-    private func generateCoverVisualDraft() async {
+    private func handlePromptGeneration(_ request: DetailVisualPromptRequest) async {
+        switch request.target {
+        case .cover:
+            await generateCoverVisualDraft(promptOverride: visualPromptText)
+        case .slide(let id):
+            guard let slide = sortedSlides.first(where: { $0.id == id }) else { return }
+            await generateSlideVisualDraft(slide, promptOverride: visualPromptText)
+        }
+    }
+    
+    @MainActor
+    private func generateCoverVisualDraft(promptOverride: String? = nil) async {
         guard !isGeneratingVisual else { return }
         isGeneratingVisual = true
         errorMessage = nil
@@ -463,7 +507,7 @@ struct ContentProjectDetailView: View {
         visualLoadingSubtitle = "Собираем reference-guided prompt для visual cover на основе style pack и ваших референсов."
         
         do {
-            let response = try await styleImageService.generateCoverVisual(project: project, brandProfile: brandProfile)
+            let response = try await styleImageService.generateCoverVisual(project: project, brandProfile: brandProfile, promptOverride: promptOverride)
             generatedVisualPreview = PendingGeneratedVisualPreview(target: .cover, result: response)
         } catch {
             errorMessage = error.localizedDescription
@@ -473,7 +517,7 @@ struct ContentProjectDetailView: View {
     }
     
     @MainActor
-    private func generateSlideVisualDraft(_ slide: CarouselSlide) async {
+    private func generateSlideVisualDraft(_ slide: CarouselSlide, promptOverride: String? = nil) async {
         guard !isGeneratingVisual else { return }
         isGeneratingVisual = true
         errorMessage = nil
@@ -481,7 +525,7 @@ struct ContentProjectDetailView: View {
         visualLoadingSubtitle = "Слайд \(slide.order): формируем visual по headline/body и выбранному style pack."
         
         do {
-            let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile)
+            let response = try await styleImageService.generateSlideVisual(project: project, slide: slide, brandProfile: brandProfile, promptOverride: promptOverride)
             generatedVisualPreview = PendingGeneratedVisualPreview(target: .slide(slide.id), result: response)
         } catch {
             errorMessage = error.localizedDescription
@@ -556,39 +600,27 @@ struct ContentProjectDetailView: View {
         try modelContext.save()
     }
     
-    #if canImport(UIKit)
-    private func platformImage(from data: Data?) -> UIImage? {
-        guard let data else { return nil }
-        return UIImage(data: data)
+    private var coverPreviewAsset: KadroPreviewImageAsset? {
+        guard let data = project.generatedCoverImageData else { return nil }
+        return KadroPreviewImageAsset(
+            id: "project-cover-\(project.id.uuidString)",
+            title: project.title.isEmpty ? "Cover" : project.title,
+            subtitle: coverMetaText,
+            filenameStem: "kadro-\(project.title.isEmpty ? "cover" : project.title)-cover",
+            imageData: data
+        )
     }
     
-    private func imageView(_ image: UIImage) -> some View {
-        Image(uiImage: image)
-            .resizable()
-            .scaledToFit()
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 1)
-            )
+    private func slidePreviewAsset(for slide: CarouselSlide) -> KadroPreviewImageAsset? {
+        guard let data = slide.generatedImageData else { return nil }
+        return KadroPreviewImageAsset(
+            id: "project-slide-\(slide.id.uuidString)",
+            title: "Слайд \(slide.order)",
+            subtitle: slideMetaText(slide),
+            filenameStem: "kadro-\(project.title.isEmpty ? "carousel" : project.title)-slide-\(slide.order)",
+            imageData: data
+        )
     }
-    #elseif canImport(AppKit)
-    private func platformImage(from data: Data?) -> NSImage? {
-        guard let data else { return nil }
-        return NSImage(data: data)
-    }
-    
-    private func imageView(_ image: NSImage) -> some View {
-        Image(nsImage: image)
-            .resizable()
-            .scaledToFit()
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 1)
-            )
-    }
-    #endif
 }
 
 #Preview {

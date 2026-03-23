@@ -1,9 +1,4 @@
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
 
 struct GeneratedStyleVisualView: View {
     let result: KadroGeneratedStyleImageResponse
@@ -15,8 +10,8 @@ struct GeneratedStyleVisualView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    if let image = platformImage {
-                        imageView(image)
+                    if let previewAsset {
+                        KadroPreviewableGeneratedImage(asset: previewAsset, cornerRadius: 20)
                     }
                     
                     if let useButtonTitle, let onUse {
@@ -86,39 +81,14 @@ struct GeneratedStyleVisualView: View {
         return Data(base64Encoded: base64)
     }
     
-    #if canImport(UIKit)
-    private var platformImage: UIImage? {
+    private var previewAsset: KadroPreviewImageAsset? {
         guard let imageData else { return nil }
-        return UIImage(data: imageData)
+        return KadroPreviewImageAsset(
+            id: result.id,
+            title: result.visualKind.capitalized,
+            subtitle: "Style pack: \(result.stylePackID) · References: \(result.referenceCount)",
+            filenameStem: "kadro-\(result.visualKind)-\(result.stylePackID)",
+            imageData: imageData
+        )
     }
-    
-    private func imageView(_ image: UIImage) -> some View {
-        Image(uiImage: image)
-            .resizable()
-            .scaledToFit()
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 1)
-            )
-    }
-    #elseif canImport(AppKit)
-    private var platformImage: NSImage? {
-        guard let imageData else { return nil }
-        return NSImage(data: imageData)
-    }
-    
-    private func imageView(_ image: NSImage) -> some View {
-        Image(nsImage: image)
-            .resizable()
-            .scaledToFit()
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.kadroSand, lineWidth: 1)
-            )
-    }
-    #else
-    private var platformImage: Never? { nil }
-    #endif
 }

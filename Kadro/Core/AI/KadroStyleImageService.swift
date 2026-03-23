@@ -19,6 +19,8 @@ struct KadroStyleImageRequest: Encodable {
     let stylePackNegativePrompt: String
     let stylePackReferenceFolder: String
     let referenceImages: [KadroStyleReferenceImagePayload]
+    let baseImageDataURL: String?
+    let promptOverride: String?
 }
 
 struct KadroStyleReferenceImagePayload: Encodable {
@@ -77,12 +79,21 @@ final class KadroStyleImageService {
         self.encoder.keyEncodingStrategy = .convertToSnakeCase
     }
     
-    func generateCoverVisual(project: ContentProject, brandProfile: BrandProfile?) async throws -> KadroGeneratedStyleImageResponse {
-        try await generateVisual(project: project, slide: nil, brandProfile: brandProfile)
+    func generateCoverVisual(
+        project: ContentProject,
+        brandProfile: BrandProfile?,
+        promptOverride: String? = nil
+    ) async throws -> KadroGeneratedStyleImageResponse {
+        try await generateVisual(project: project, slide: nil, brandProfile: brandProfile, promptOverride: promptOverride)
     }
     
-    func generateSlideVisual(project: ContentProject, slide: CarouselSlide, brandProfile: BrandProfile?) async throws -> KadroGeneratedStyleImageResponse {
-        try await generateVisual(project: project, slide: slide, brandProfile: brandProfile)
+    func generateSlideVisual(
+        project: ContentProject,
+        slide: CarouselSlide,
+        brandProfile: BrandProfile?,
+        promptOverride: String? = nil
+    ) async throws -> KadroGeneratedStyleImageResponse {
+        try await generateVisual(project: project, slide: slide, brandProfile: brandProfile, promptOverride: promptOverride)
     }
     
     func imageData(from dataURL: String) -> Data? {
@@ -91,16 +102,23 @@ final class KadroStyleImageService {
         return Data(base64Encoded: base64)
     }
     
+    func dataURL(from imageData: Data, mimeType: String = "image/png") -> String {
+        "data:\(mimeType);base64,\(imageData.base64EncodedString())"
+    }
+    
     private func generateVisual(
         project: ContentProject,
         slide: CarouselSlide?,
-        brandProfile: BrandProfile?
+        brandProfile: BrandProfile?,
+        promptOverride: String?
     ) async throws -> KadroGeneratedStyleImageResponse {
         guard let stylePack = resolvedStylePack(project: project, brandProfile: brandProfile) else {
             throw KadroStyleImageServiceError.missingStylePack
         }
         
-        let references = try StylePackReferenceLoader.referenceAssets(for: stylePack.id)
+        let baseImageDataURL = resolvedBaseImageDataURL(project: project, slide: slide)
+        let referenceLimit = baseImageDataURL == nil ? 2 : 1
+        let references = try StylePackReferenceLoader.referenceAssets(for: stylePack.id, limit: referenceLimit)
         guard !references.isEmpty else {
             throw KadroStyleImageServiceError.missingReferences(stylePack.displayName)
         }
@@ -122,7 +140,9 @@ final class KadroStyleImageService {
             stylePackPromptTemplate: stylePack.promptTemplate,
             stylePackNegativePrompt: stylePack.negativePrompt,
             stylePackReferenceFolder: stylePack.referenceFolder,
-            referenceImages: references.map { KadroStyleReferenceImagePayload(filename: $0.filename, dataURL: $0.dataURL) }
+            referenceImages: references.map { KadroStyleReferenceImagePayload(filename: $0.filename, dataURL: $0.dataURL) },
+            baseImageDataURL: baseImageDataURL,
+            promptOverride: promptOverride?.trimmingCharacters(in: .whitespacesAndNewlines)
         )
         
         var request = URLRequest(url: URL(string: SupabaseConfig.projectURLString + "/functions/v1/generate-style-visual")!)
@@ -192,6 +212,44 @@ final class KadroStyleImageService {
         return "quote_card"
     }
     
+    private func resolvedBaseImageDataURL(
+        project: ContentProject,
+        slide: CarouselSlide?
+    ) -> String? {
+        if let slide {
+            if let existingSlideImage = slide.generatedImageData {
+                return dataURL(from: existingSlideImage)
+            }
+            if let previousSlide = previousGeneratedSlideImageData(in: project, before: slide.order) {
+                return dataURL(from: previousSlide)
+            }
+            if let cover = project.generatedCoverImageData {
+                return dataURL(from: cover)
+            }
+            return nil
+        }
+        
+        if let cover = project.generatedCoverImageData {
+            return dataURL(from: cover)
+        }
+        
+        return nil
+    }
+    
+    private func previousGeneratedSlideImageData(in project: ContentProject, before order: Int) -> Data? {
+        let candidateSlides = (project.slides ?? [])
+            .filter { $0.order < order }
+            .sorted { $0.order > $1.order }
+        
+        for candidate in candidateSlides {
+            if let imageData = candidate.generatedImageData {
+                return imageData
+            }
+        }
+        
+        return nil
+    }
+    
     private func aspectRatio(for type: ContentType) -> String {
         switch type {
         case .reels, .stories:
@@ -221,7 +279,7 @@ enum KadroStyleImageServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingStylePack:
-            return "Сначала выберите style pack в разделе Brand."
+            return "Сначала выберите style pack в разделе Create."
         case .missingReferences(let styleName):
             return "Для style pack \(styleName) не найдены reference images в bundle."
         case .http(_, let message):
