@@ -8,15 +8,32 @@ struct ContentProjectDetailView: View {
     @Query private var profiles: [BrandProfile]
     
     @State private var isRegenerating = false
+    @State private var isGeneratingVisual = false
     @State private var errorMessage: String?
     @State private var latestResult: GeneratedContentResult?
+    @State private var generatedVisualResult: KadroGeneratedStyleImageResponse?
     
     private let aiService = KadroAIService()
+    private let styleImageService = KadroStyleImageService()
+    
+    private var brandProfile: BrandProfile? {
+        profiles.first
+    }
+    
+    private var selectedStylePack: StylePack? {
+        StylePackLibrary.pack(for: brandProfile?.selectedStylePackID)
+    }
+    
+    private var selectedStylePackReferenceCount: Int {
+        guard let selectedStylePack else { return 0 }
+        return StylePackReferenceLoader.referenceCount(for: selectedStylePack.id)
+    }
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 heroCard
+                visualGenerationCard
                 
                 if !project.rawInput.isEmpty {
                     textSection(title: "Исходная идея", body: project.rawInput)
@@ -78,14 +95,17 @@ struct ContentProjectDetailView: View {
                 }
                 .font(.kadroFootnote)
                 .foregroundColor(.kadroLime)
-                .disabled(isRegenerating)
+                .disabled(isRegenerating || isGeneratingVisual)
             }
         }
         .sheet(item: $latestResult) { result in
             GeneratedContentView(result: result)
         }
+        .sheet(item: $generatedVisualResult) { result in
+            GeneratedStyleVisualView(result: result)
+        }
         .alert(
-            "Не удалось создать новую версию",
+            "Что-то пошло не так",
             isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -100,28 +120,8 @@ struct ContentProjectDetailView: View {
             }
         )
         .overlay {
-            if isRegenerating {
-                ZStack {
-                    Color.black.opacity(0.14)
-                        .ignoresSafeArea()
-                    
-                    KadroCard {
-                        VStack(spacing: 12) {
-                            ProgressView()
-                                .tint(.kadroCharcoal)
-                            Text("Генерируем новую версию")
-                                .font(.kadroTitle3)
-                                .foregroundColor(.kadroCharcoal)
-                            Text("Создаем новый вариант на основе той же идеи и текущих настроек формата.")
-                                .font(.kadroCallout)
-                                .foregroundColor(.kadroWarmGray)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    .frame(maxWidth: 320)
-                    .padding(24)
-                }
+            if isRegenerating || isGeneratingVisual {
+                loadingOverlay
             }
         }
     }
@@ -161,6 +161,75 @@ struct ContentProjectDetailView: View {
                     .font(.kadroCaption)
                     .foregroundColor(.kadroWarmGray)
             }
+        }
+    }
+    
+    private var visualGenerationCard: some View {
+        KadroCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Visual draft")
+                    .font(.kadroTitle3)
+                    .foregroundColor(.kadroCharcoal)
+                
+                if let selectedStylePack {
+                    Text("Style pack: \(selectedStylePack.displayName)")
+                        .font(.kadroBodyMedium)
+                        .foregroundColor(.kadroCharcoal)
+                    Text(selectedStylePack.shortDescription)
+                        .font(.kadroCallout)
+                        .foregroundColor(.kadroWarmGray)
+                    Text("References found: \(selectedStylePackReferenceCount)")
+                        .font(.kadroFootnote)
+                        .foregroundColor(.kadroWarmGray)
+                    Text(selectedStylePack.referenceFolder)
+                        .font(.kadroCaption)
+                        .foregroundColor(.kadroWarmGray)
+                    
+                    Button {
+                        Task {
+                            await generateVisualDraft()
+                        }
+                    } label: {
+                        Text("Создать visual cover")
+                            .font(.kadroButton)
+                            .foregroundColor(.kadroCharcoal)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color.kadroLime)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .disabled(isGeneratingVisual || selectedStylePackReferenceCount == 0)
+                    .opacity((isGeneratingVisual || selectedStylePackReferenceCount == 0) ? 0.55 : 1)
+                } else {
+                    Text("Сначала выберите style pack в разделе Brand, чтобы мы могли использовать ваши references для visual generation.")
+                        .font(.kadroCallout)
+                        .foregroundColor(.kadroWarmGray)
+                }
+            }
+        }
+    }
+    
+    private var loadingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.14)
+                .ignoresSafeArea()
+            
+            KadroCard {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .tint(.kadroCharcoal)
+                    Text(isGeneratingVisual ? "Генерируем визуал" : "Генерируем новую версию")
+                        .font(.kadroTitle3)
+                        .foregroundColor(.kadroCharcoal)
+                    Text(isGeneratingVisual ? "Собираем reference-guided image generation prompt на основе style pack и ваших референсов." : "Создаем новый вариант на основе той же идеи и текущих настроек формата.")
+                        .font(.kadroCallout)
+                        .foregroundColor(.kadroWarmGray)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.vertical, 8)
+            }
+            .frame(maxWidth: 320)
+            .padding(24)
         }
     }
     
@@ -259,6 +328,22 @@ struct ContentProjectDetailView: View {
         }
         
         isRegenerating = false
+    }
+    
+    @MainActor
+    private func generateVisualDraft() async {
+        guard !isGeneratingVisual else { return }
+        isGeneratingVisual = true
+        errorMessage = nil
+        
+        do {
+            let response = try await styleImageService.generateCoverVisual(project: project, brandProfile: brandProfile)
+            generatedVisualResult = response
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isGeneratingVisual = false
     }
 }
 
