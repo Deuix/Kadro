@@ -18,10 +18,35 @@ final class AppState {
     
     var selectedTab: TabItem = .home
     var showCreateFlow: Bool = false
+    var createDraft: CreateDraft?
     
     init() {
         self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
     }
+    
+    func openCreate(
+        outputType: ContentType? = nil,
+        source: InputSource? = nil,
+        seedText: String = ""
+    ) {
+        createDraft = CreateDraft(
+            outputType: outputType,
+            source: source,
+            seedText: seedText
+        )
+        selectedTab = .create
+    }
+    
+    func consumeCreateDraft() -> CreateDraft? {
+        defer { createDraft = nil }
+        return createDraft
+    }
+}
+
+struct CreateDraft {
+    let outputType: ContentType?
+    let source: InputSource?
+    let seedText: String
 }
 
 // MARK: - Tab Items

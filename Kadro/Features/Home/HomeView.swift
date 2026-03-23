@@ -61,7 +61,7 @@ struct HomeView: View {
                 .foregroundColor(.kadroSoftWhite.opacity(0.8))
             
             Button {
-                appState.selectedTab = .create
+                appState.openCreate()
             } label: {
                 Text("Начать")
                     .font(.kadroButton)
@@ -91,15 +91,15 @@ struct HomeView: View {
                 GridItem(.flexible(), spacing: 12)
             ], spacing: 12) {
                 KadroQuickActionCard(icon: "text.quote", title: "Пост") {
-                    appState.selectedTab = .create
+                    appState.openCreate(outputType: .post)
                 }
                 
                 KadroQuickActionCard(icon: "rectangle.split.3x1", title: "Карусель") {
-                    appState.selectedTab = .create
+                    appState.openCreate(outputType: .carousel)
                 }
                 
                 KadroQuickActionCard(icon: "video", title: "Reels") {
-                    appState.selectedTab = .create
+                    appState.openCreate(outputType: .reels)
                 }
             }
         }
@@ -120,7 +120,7 @@ struct HomeView: View {
                     subtitle: "Ваши черновики появятся здесь",
                     buttonTitle: "Создать первый"
                 ) {
-                    appState.selectedTab = .create
+                    appState.openCreate()
                 }
             } else {
                 ForEach(projects.prefix(3)) { project in
@@ -131,35 +131,40 @@ struct HomeView: View {
     }
     
     private func draftCard(for project: ContentProject) -> some View {
-        KadroCard {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: project.type.icon)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.kadroLime)
-                    .frame(width: 40, height: 40)
-                    .background(Color.kadroCharcoal)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(project.title.isEmpty ? "Без названия" : project.title)
-                        .font(.kadroBodyMedium)
-                        .foregroundColor(.kadroCharcoal)
+        NavigationLink {
+            ContentProjectDetailView(project: project)
+        } label: {
+            KadroCard {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: project.type.icon)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundColor(.kadroLime)
+                        .frame(width: 40, height: 40)
+                        .background(Color.kadroCharcoal)
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     
-                    HStack(spacing: 8) {
-                        Text(project.type.rawValue)
-                            .font(.kadroFootnote)
-                            .foregroundColor(.kadroWarmGray)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(project.title.isEmpty ? "Без названия" : project.title)
+                            .font(.kadroBodyMedium)
+                            .foregroundColor(.kadroCharcoal)
                         
-                        KadroStatusBadge(
-                            title: project.status.rawValue,
-                            color: statusColor(for: project.status)
-                        )
+                        HStack(spacing: 8) {
+                            Text(project.type.rawValue)
+                                .font(.kadroFootnote)
+                                .foregroundColor(.kadroWarmGray)
+                            
+                            KadroStatusBadge(
+                                title: project.status.rawValue,
+                                color: statusColor(for: project.status)
+                            )
+                        }
                     }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
             }
         }
+        .buttonStyle(.plain)
     }
     
     // MARK: - Ideas for Today
@@ -192,7 +197,7 @@ struct HomeView: View {
     
     private func ideaCard(icon: String, title: String, subtitle: String) -> some View {
         KadroActionCard(icon: icon, title: title, subtitle: subtitle) {
-            appState.selectedTab = .create
+            appState.openCreate()
         }
     }
     

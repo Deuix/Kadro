@@ -91,55 +91,60 @@ struct ContentLibraryView: View {
     }
     
     private func contentCard(for project: ContentProject) -> some View {
-        KadroCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top) {
-                    Image(systemName: project.type.icon)
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.kadroLime)
-                        .frame(width: 36, height: 36)
-                        .background(Color.kadroCharcoal)
-                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(project.title.isEmpty ? "Без названия" : project.title)
-                            .font(.kadroBodyMedium)
-                            .foregroundColor(.kadroCharcoal)
-                            .lineLimit(1)
+        NavigationLink {
+            ContentProjectDetailView(project: project)
+        } label: {
+            KadroCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .top) {
+                        Image(systemName: project.type.icon)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.kadroLime)
+                            .frame(width: 36, height: 36)
+                            .background(Color.kadroCharcoal)
+                            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                         
-                        Text(project.type.rawValue + " · " + project.platform.rawValue)
-                            .font(.kadroFootnote)
-                            .foregroundColor(.kadroWarmGray)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(project.title.isEmpty ? "Без названия" : project.title)
+                                .font(.kadroBodyMedium)
+                                .foregroundColor(.kadroCharcoal)
+                                .lineLimit(1)
+                            
+                            Text(project.type.rawValue + " · " + project.platform.rawValue)
+                                .font(.kadroFootnote)
+                                .foregroundColor(.kadroWarmGray)
+                        }
+                        
+                        Spacer()
+                        
+                        KadroStatusBadge(
+                            title: project.status.rawValue,
+                            color: statusColor(for: project.status)
+                        )
                     }
                     
-                    Spacer()
+                    if !project.rawInput.isEmpty {
+                        Text(project.rawInput)
+                            .font(.kadroCallout)
+                            .foregroundColor(.kadroWarmGray)
+                            .lineLimit(2)
+                    }
                     
-                    KadroStatusBadge(
-                        title: project.status.rawValue,
-                        color: statusColor(for: project.status)
-                    )
-                }
-                
-                if !project.rawInput.isEmpty {
-                    Text(project.rawInput)
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
-                        .lineLimit(2)
-                }
-                
-                HStack {
-                    Text(project.updatedAt, style: .relative)
-                        .font(.kadroCaption)
-                        .foregroundColor(.kadroWarmGray)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.kadroSand)
+                    HStack {
+                        Text(project.updatedAt, style: .relative)
+                            .font(.kadroCaption)
+                            .foregroundColor(.kadroWarmGray)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.kadroSand)
+                    }
                 }
             }
         }
+        .buttonStyle(.plain)
     }
     
     // MARK: - Empty States
@@ -154,7 +159,7 @@ struct ContentLibraryView: View {
                     subtitle: "Создайте свой первый пост, карусель или сценарий",
                     buttonTitle: "Создать"
                 ) {
-                    appState.selectedTab = .create
+                    appState.openCreate()
                 }
             }
     }
