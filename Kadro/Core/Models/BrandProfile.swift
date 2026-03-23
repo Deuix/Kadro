@@ -31,10 +31,10 @@ enum UserType: String, Codable, CaseIterable, Identifiable {
 // MARK: - Tone Axis
 
 enum ToneAxis: String, Codable, CaseIterable {
-    case expertSimple = "Экспертность"       // expert ↔ simple
-    case warmStrict = "Теплота"              // warm ↔ strict
-    case boldNeutral = "Смелость"            // bold ↔ neutral
-    case shortDetailed = "Детальность"       // short ↔ detailed
+    case expertSimple = "Экспертность"
+    case warmStrict = "Теплота"
+    case boldNeutral = "Смелость"
+    case shortDetailed = "Детальность"
 }
 
 // MARK: - Visual Mood
@@ -63,8 +63,6 @@ final class BrandProfile {
     var userType: UserType?
     
     // Tone — stored as Float 0.0 to 1.0
-    // 0.0 = expert / warm / bold / short
-    // 1.0 = simple / strict / neutral / detailed
     var toneExpertSimple: Float
     var toneWarmStrict: Float
     var toneBoldNeutral: Float
@@ -78,10 +76,12 @@ final class BrandProfile {
     
     // Visual style
     var visualMood: VisualMood
+    var selectedStylePackID: String
+    var selectedStylePackName: String
     var palettePreference: String
     var coverStyle: String
     
-    // Best examples
+    // Best examples / references
     var bestExamples: String
     
     // Metadata
@@ -111,6 +111,8 @@ final class BrandProfile {
         self.favoritePhrases = ""
         
         self.visualMood = .minimal
+        self.selectedStylePackID = ""
+        self.selectedStylePackName = ""
         self.palettePreference = ""
         self.coverStyle = ""
         self.bestExamples = ""

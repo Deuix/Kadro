@@ -43,6 +43,11 @@ type GenerateContentBody = {
     cta_style?: string
     favorite_phrases?: string
     visual_mood?: string
+    selected_style_pack_id?: string
+    selected_style_pack_name?: string
+    style_pack_prompt_template?: string
+    style_pack_negative_prompt?: string
+    style_pack_reference_folder?: string
     palette_preference?: string
     cover_style?: string
     best_examples?: string
@@ -415,6 +420,8 @@ function buildUserPrompt(payload: Record<string, unknown>) {
     'The content should feel premium, human, clear, and tasteful.',
     'Prioritize strong hooks, clean structure, and high readability.',
     'Use brand words when useful and avoid banned words if supplied.',
+    'If brand_profile contains a selected style pack, preserve that creative direction in carousel covers, visual suggestions, and aesthetic language.',
+    'Treat style_pack_prompt_template as a visual north star and style_pack_negative_prompt as constraints for future image generation.',
     'If output_type is post, prioritize hook + main_text + cta + short_version + hashtags.',
     'If output_type is carousel, prioritize cover_title + 5-8 slides with concise copy.',
     'If output_type is reels, prioritize hook + script_beats + on_screen_text + caption + cover_idea.',

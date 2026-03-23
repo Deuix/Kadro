@@ -538,6 +538,25 @@ struct CreateFlowView: View {
                 }
             }
             
+            if let stylePack = StylePackLibrary.pack(for: profiles.first?.selectedStylePackID) {
+                KadroCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Выбранный style pack")
+                            .font(.kadroFootnote)
+                            .foregroundColor(.kadroWarmGray)
+                        Text(stylePack.displayName)
+                            .font(.kadroBodyMedium)
+                            .foregroundColor(.kadroCharcoal)
+                        Text(stylePack.shortDescription)
+                            .font(.kadroCallout)
+                            .foregroundColor(.kadroWarmGray)
+                        Text(stylePack.referenceFolder)
+                            .font(.kadroCaption)
+                            .foregroundColor(.kadroWarmGray)
+                    }
+                }
+            }
+            
             KadroCard {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("AI routing")

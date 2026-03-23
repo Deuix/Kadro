@@ -15,6 +15,11 @@ struct KadroBrandSnapshot: Codable {
     let ctaStyle: String
     let favoritePhrases: String
     let visualMood: String
+    let selectedStylePackID: String
+    let selectedStylePackName: String
+    let stylePackPromptTemplate: String
+    let stylePackNegativePrompt: String
+    let stylePackReferenceFolder: String
     let palettePreference: String
     let coverStyle: String
     let bestExamples: String
@@ -33,7 +38,13 @@ struct KadroBrandSnapshot: Codable {
         self.wordsToAvoid = profile?.wordsToAvoid ?? ""
         self.ctaStyle = profile?.ctaStyle ?? ""
         self.favoritePhrases = profile?.favoritePhrases ?? ""
+        let selectedStylePack = StylePackLibrary.pack(for: profile?.selectedStylePackID)
         self.visualMood = profile?.visualMood.rawValue ?? ""
+        self.selectedStylePackID = profile?.selectedStylePackID ?? ""
+        self.selectedStylePackName = profile?.selectedStylePackName ?? selectedStylePack?.displayName ?? ""
+        self.stylePackPromptTemplate = selectedStylePack?.promptTemplate ?? ""
+        self.stylePackNegativePrompt = selectedStylePack?.negativePrompt ?? ""
+        self.stylePackReferenceFolder = selectedStylePack?.referenceFolder ?? ""
         self.palettePreference = profile?.palettePreference ?? ""
         self.coverStyle = profile?.coverStyle ?? ""
         self.bestExamples = profile?.bestExamples ?? ""
