@@ -2,7 +2,7 @@
 //  CreateFlowView.swift
 //  Kadro
 //
-//  Create tab — guided 3-step creation flow
+//  Simplified Instagram-first create flow
 //
 
 import SwiftUI
@@ -11,50 +11,120 @@ import SwiftData
 // MARK: - Create Flow Steps
 
 enum CreateStep: Int, CaseIterable {
-    case inputSource = 0
-    case enterContent = 1
-    case chooseOutput = 2
+    case service = 0
+    case format = 1
+    case idea = 2
+    case refine = 3
     
     var title: String {
         switch self {
-        case .inputSource: return "Источник"
-        case .enterContent: return "Идея"
-        case .chooseOutput: return "Формат"
+        case .service: return "Сервис"
+        case .format: return "Формат"
+        case .idea: return "Идея"
+        case .refine: return "Стиль"
         }
     }
 }
 
-// MARK: - Input Source
+// MARK: - Draft Compatibility
 
 enum InputSource: String, CaseIterable, Identifiable {
     case topic = "Идея или тема"
-    case bullets = "Тезисы"
     case voiceNote = "Голосовая заметка"
-    case textOrLink = "Текст или ссылка"
-    case oldPost = "Старый пост"
-    case bestContent = "Лучший контент"
+    case textOrLink = "Текст"
+    
+    var id: String { rawValue }
+}
+
+// MARK: - Platform Selection
+
+enum CreateService: String, CaseIterable, Identifiable {
+    case instagram = "Instagram"
+    case tiktok = "TikTok"
+    case x = "X"
+    case other = "Other"
     
     var id: String { rawValue }
     
     var icon: String {
         switch self {
-        case .topic: return "lightbulb"
-        case .bullets: return "list.bullet"
-        case .voiceNote: return "mic"
-        case .textOrLink: return "doc.text"
-        case .oldPost: return "arrow.counterclockwise"
-        case .bestContent: return "star"
+        case .instagram: return "camera"
+        case .tiktok: return "play.square"
+        case .x: return "text.bubble"
+        case .other: return "square.grid.2x2"
         }
     }
     
     var subtitle: String {
         switch self {
-        case .topic: return "Опишите тему в свободной форме"
-        case .bullets: return "Перечислите основные мысли"
-        case .voiceNote: return "Запишите голосом — мы расшифруем в editable текст"
-        case .textOrLink: return "Вставьте готовый текст"
-        case .oldPost: return "Переработайте существующий"
-        case .bestContent: return "Начните с лучшего примера"
+        case .instagram: return "Посты, сторис и карусели"
+        case .tiktok: return "Скоро"
+        case .x: return "Скоро"
+        case .other: return "Скоро"
+        }
+    }
+    
+    var isAvailable: Bool {
+        self == .instagram
+    }
+}
+
+enum InstagramCreateFormat: String, CaseIterable, Identifiable {
+    case post = "Post"
+    case story = "Story"
+    case carousel = "Carousel"
+    
+    var id: String { rawValue }
+    
+    var icon: String {
+        switch self {
+        case .post: return "square.text.square"
+        case .story: return "rectangle.portrait"
+        case .carousel: return "rectangle.split.3x1"
+        }
+    }
+    
+    var subtitle: String {
+        switch self {
+        case .post: return "Один сильный визуал + короткий текст"
+        case .story: return "Вертикальный сторис-драфт"
+        case .carousel: return "Слайды с чёткой структурой"
+        }
+    }
+    
+    var outputType: ContentType {
+        switch self {
+        case .post: return .post
+        case .story: return .stories
+        case .carousel: return .carousel
+        }
+    }
+}
+
+enum InstagramPostCanvas: String, CaseIterable, Identifiable {
+    case square = "Квадрат"
+    case portrait = "Вертикальный"
+    
+    var id: String { rawValue }
+    
+    var aspectRatio: String {
+        switch self {
+        case .square: return "1:1"
+        case .portrait: return "4:5"
+        }
+    }
+    
+    var subtitle: String {
+        switch self {
+        case .square: return "1:1 · компактно и чисто"
+        case .portrait: return "4:5 · больше воздуха и акцента"
+        }
+    }
+    
+    var formatDetail: String {
+        switch self {
+        case .square: return "instagram_post_square"
+        case .portrait: return "instagram_post_portrait"
         }
     }
 }
@@ -66,10 +136,12 @@ struct CreateFlowView: View {
     
     @StateObject private var voiceRecorder = VoiceNoteRecorder()
     
-    @State private var currentStep: CreateStep = .inputSource
-    @State private var selectedSource: InputSource?
+    @State private var currentStep: CreateStep = .service
+    @State private var selectedService: CreateService?
+    @State private var selectedInstagramFormat: InstagramCreateFormat?
+    @State private var selectedPostCanvas: InstagramPostCanvas = .portrait
+    @State private var selectedCarouselSlideCount: Int = 7
     @State private var inputText: String = ""
-    @State private var selectedOutputType: ContentType = .post
     @State private var selectedTone: ContentTone?
     @State private var selectedGoal: ContentGoal?
     @State private var selectedStylePackID: String = StylePackLibrary.packs.first?.id ?? ""
@@ -83,19 +155,67 @@ struct CreateFlowView: View {
     private let aiService = KadroAIService()
     private let stylePacks = StylePackLibrary.packs
     private let transcriptionService = KadroVoiceTranscriptionService()
+    private let carouselSlideOptions = Array(4...10)
+    
+    private var resolvedOutputType: ContentType? {
+        selectedInstagramFormat?.outputType
+    }
+    
+    private var resolvedFormatDetail: String? {
+        switch selectedInstagramFormat {
+        case .post:
+            return selectedPostCanvas.formatDetail
+        case .story:
+            return "instagram_story"
+        case .carousel:
+            return "instagram_carousel"
+        case .none:
+            return nil
+        }
+    }
+    
+    private var resolvedPreferredImageAspectRatio: String? {
+        switch selectedInstagramFormat {
+        case .post:
+            return selectedPostCanvas.aspectRatio
+        case .story:
+            return "9:16"
+        case .carousel:
+            return "4:5"
+        case .none:
+            return nil
+        }
+    }
+    
+    private var resolvedDesiredSlideCount: Int? {
+        selectedInstagramFormat == .carousel ? selectedCarouselSlideCount : nil
+    }
     
     private var primaryButtonTitle: String {
-        currentStep == .chooseOutput ? "Создать" : "Далее"
+        switch currentStep {
+        case .service: return "Продолжить"
+        case .format: return "Далее"
+        case .idea: return "Продолжить"
+        case .refine:
+            switch selectedInstagramFormat {
+            case .post: return "Создать пост"
+            case .story: return "Создать сторис"
+            case .carousel: return "Создать карусель"
+            case .none: return "Создать"
+            }
+        }
     }
     
     private var canContinue: Bool {
         switch currentStep {
-        case .inputSource:
-            return selectedSource != nil
-        case .enterContent:
+        case .service:
+            return selectedService?.isAvailable == true
+        case .format:
+            return selectedInstagramFormat != nil
+        case .idea:
             return !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isTranscribingVoiceNote
-        case .chooseOutput:
-            return !isGenerating && !selectedStylePackID.isEmpty
+        case .refine:
+            return !isGenerating && !selectedStylePackID.isEmpty && resolvedOutputType != nil
         }
     }
     
@@ -105,20 +225,16 @@ struct CreateFlowView: View {
     
     private var loadingTitle: String {
         if isTranscribingVoiceNote {
-            return "Расшифровываем заметку"
+            return "Обрабатываем голос"
         }
-        return "Генерируем контент"
+        return "Создаём контент"
     }
     
     private var loadingSubtitle: String {
         if isTranscribingVoiceNote {
-            return "Переводим аудио в чистый editable текст, чтобы дальше собрать structured content package."
+            return "Преобразуем запись в аккуратный текст, который можно сразу отредактировать."
         }
-        return "Собираем structured result, учитываем brand memory и подготавливаем publish-ready draft."
-    }
-    
-    private var transcriptionLanguageHint: String {
-        profiles.first?.language ?? "Русский"
+        return "Готовим чистый и понятный Instagram-драфт с учётом выбранного тона, цели и визуального стиля."
     }
     
     var body: some View {
@@ -129,12 +245,14 @@ struct CreateFlowView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         switch currentStep {
-                        case .inputSource:
-                            inputSourceStep
-                        case .enterContent:
-                            enterContentStep
-                        case .chooseOutput:
-                            chooseOutputStep
+                        case .service:
+                            serviceStep
+                        case .format:
+                            formatStep
+                        case .idea:
+                            ideaStep
+                        case .refine:
+                            refineStep
                         }
                     }
                     .padding(.horizontal, 20)
@@ -172,12 +290,8 @@ struct CreateFlowView: View {
                     loadingOverlay
                 }
             }
-            .onChange(of: selectedSource) { _, newValue in
-                guard newValue != .voiceNote else { return }
-                resetVoiceNoteState(keepTranscript: false)
-            }
             .onChange(of: voiceRecorder.completedRecordingURL) { _, newValue in
-                guard let newValue, selectedSource == .voiceNote else { return }
+                guard let newValue else { return }
                 let identifier = newValue.lastPathComponent
                 guard lastTranscribedRecordingIdentifier != identifier else { return }
                 Task {
@@ -194,7 +308,7 @@ struct CreateFlowView: View {
         }
     }
     
-    // MARK: - Progress Bar
+    // MARK: - Progress
     
     private var progressBar: some View {
         HStack(spacing: 6) {
@@ -208,223 +322,299 @@ struct CreateFlowView: View {
         .padding(.vertical, 8)
     }
     
-    // MARK: - Step 1: Input Source
+    // MARK: - Step 1
     
-    private var inputSourceStep: some View {
+    private var serviceStep: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("С чего начнём?")
-                .font(.kadroTitle)
-                .foregroundColor(.kadroCharcoal)
+            stepHeader(
+                eyebrow: "Шаг 1",
+                title: "Где публикуем?",
+                subtitle: "Сейчас идеально оттачиваем Instagram. Остальные платформы подключим следом."
+            )
             
-            Text("Выберите, как вы хотите начать создание контента")
-                .font(.kadroCallout)
-                .foregroundColor(.kadroWarmGray)
-            
-            VStack(spacing: 10) {
-                ForEach(InputSource.allCases) { source in
+            VStack(spacing: 12) {
+                ForEach(CreateService.allCases) { service in
                     Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            selectedSource = source
-                        }
+                        handleServiceSelection(service)
                     } label: {
                         HStack(spacing: 14) {
-                            Image(systemName: source.icon)
+                            Image(systemName: service.icon)
                                 .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(selectedSource == source ? .kadroCharcoal : .kadroLime)
-                                .frame(width: 44, height: 44)
-                                .background(selectedSource == source ? Color.kadroLime : Color.kadroCharcoal)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .foregroundColor(selectedService == service ? .kadroCharcoal : .kadroLime)
+                                .frame(width: 48, height: 48)
+                                .background(selectedService == service ? Color.kadroLime : Color.kadroCharcoal)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(source.rawValue)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(service.rawValue)
                                     .font(.kadroBodyMedium)
                                     .foregroundColor(.kadroCharcoal)
-                                
-                                Text(source.subtitle)
+                                Text(service.subtitle)
                                     .font(.kadroFootnote)
                                     .foregroundColor(.kadroWarmGray)
                             }
                             
                             Spacer()
                             
-                            if selectedSource == source {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.kadroLime)
-                                    .font(.system(size: 22))
+                            if service.isAvailable {
+                                if selectedService == service {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 22))
+                                        .foregroundColor(.kadroLime)
+                                }
+                            } else {
+                                KadroStatusBadge(title: "Скоро", color: .kadroWarmGray)
                             }
                         }
-                        .padding(14)
+                        .padding(16)
                         .background(Color.kadroSoftWhite)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(selectedSource == source ? Color.kadroLime : Color.clear, lineWidth: 2)
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(selectedService == service ? Color.kadroLime : Color.kadroSand.opacity(0.65), lineWidth: selectedService == service ? 2 : 1)
                         )
+                        .opacity(service.isAvailable ? 1 : 0.72)
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
     }
     
-    // MARK: - Step 2: Enter Content
+    // MARK: - Step 2
     
-    private var enterContentStep: some View {
-        Group {
-            if selectedSource == .voiceNote {
-                voiceNoteStep
-            } else {
-                textInputStep
-            }
-        }
-    }
-    
-    private var textInputStep: some View {
+    private var formatStep: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("О чём будет контент?")
-                .font(.kadroTitle)
-                .foregroundColor(.kadroCharcoal)
-            
-            Text("Опишите свою идею — мы поможем превратить её в готовый контент")
-                .font(.kadroCallout)
-                .foregroundColor(.kadroWarmGray)
-            
-            ideaEditorSection(
-                title: nil,
-                placeholder: "Например: хочу пост для экспертов о том, почему личный бренд не должен звучать как реклама"
+            stepHeader(
+                eyebrow: "Шаг 2",
+                title: "Что создаём для Instagram?",
+                subtitle: "Выберите формат, а для Post — ещё и тип изображения."
             )
             
-            suggestionChips
-        }
-    }
-    
-    private var voiceNoteStep: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Запишите голосовую заметку")
-                .font(.kadroTitle)
-                .foregroundColor(.kadroCharcoal)
-            
-            Text("Запишите мысль вслух. Мы расшифруем её в editable текст и используем для генерации контента.")
-                .font(.kadroCallout)
-                .foregroundColor(.kadroWarmGray)
-            
-            KadroCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(voiceRecorder.isRecording ? "Идёт запись" : "Голосовая заметка")
-                                .font(.kadroBodyMedium)
-                                .foregroundColor(.kadroCharcoal)
-                            Text(voiceRecorder.isRecording ? "Говорите свободно — идея не должна быть идеальной" : "До 90 секунд. После остановки начнём транскрибацию автоматически.")
-                                .font(.kadroCallout)
-                                .foregroundColor(.kadroWarmGray)
+            VStack(spacing: 12) {
+                ForEach(InstagramCreateFormat.allCases) { format in
+                    Button {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                            selectedInstagramFormat = format
                         }
-                        Spacer()
-                        KadroStatusBadge(
-                            title: voiceRecorder.isRecording ? "REC" : formattedDuration(voiceRecorder.currentDuration),
-                            color: voiceRecorder.isRecording ? .kadroError : .kadroLime
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: format.icon)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(selectedInstagramFormat == format ? .kadroCharcoal : .kadroLime)
+                                .frame(width: 48, height: 48)
+                                .background(selectedInstagramFormat == format ? Color.kadroLime : Color.kadroCharcoal)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(format.rawValue)
+                                    .font(.kadroBodyMedium)
+                                    .foregroundColor(.kadroCharcoal)
+                                Text(format.subtitle)
+                                    .font(.kadroFootnote)
+                                    .foregroundColor(.kadroWarmGray)
+                            }
+                            
+                            Spacer()
+                            
+                            if selectedInstagramFormat == format {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(.kadroLime)
+                            }
+                        }
+                        .padding(16)
+                        .background(Color.kadroSoftWhite)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(selectedInstagramFormat == format ? Color.kadroLime : Color.kadroSand.opacity(0.65), lineWidth: selectedInstagramFormat == format ? 2 : 1)
                         )
                     }
+                    .buttonStyle(.plain)
+                }
+            }
+            
+            if selectedInstagramFormat == .post {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Тип изображения")
+                        .font(.kadroTitle3)
+                        .foregroundColor(.kadroCharcoal)
                     
                     HStack(spacing: 12) {
-                        Button {
-                            Task {
-                                if voiceRecorder.isRecording {
-                                    voiceRecorder.stopRecording()
-                                } else {
-                                    inputText = ""
-                                    lastTranscription = nil
-                                    lastTranscribedRecordingIdentifier = nil
-                                    await voiceRecorder.startRecording()
-                                }
-                            }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: voiceRecorder.isRecording ? "stop.fill" : "mic.fill")
-                                Text(voiceRecorder.isRecording ? "Остановить" : "Начать запись")
-                            }
-                            .font(.kadroButton)
-                            .foregroundColor(voiceRecorder.isRecording ? .kadroSoftWhite : .kadroCharcoal)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(voiceRecorder.isRecording ? Color.kadroCharcoal : Color.kadroLime)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        }
-                        .disabled(isTranscribingVoiceNote)
-                        
-                        if voiceRecorder.completedRecordingURL != nil && !voiceRecorder.isRecording {
+                        ForEach(InstagramPostCanvas.allCases) { canvas in
                             Button {
-                                resetVoiceNoteState(keepTranscript: false)
+                                withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                                    selectedPostCanvas = canvas
+                                }
                             } label: {
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.kadroCharcoal)
-                                    .frame(width: 54, height: 54)
-                                    .background(Color.kadroIvory)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(canvas.rawValue)
+                                        .font(.kadroBodyMedium)
+                                        .foregroundColor(.kadroCharcoal)
+                                    Text(canvas.subtitle)
+                                        .font(.kadroFootnote)
+                                        .foregroundColor(.kadroWarmGray)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(16)
+                                .frame(maxWidth: .infinity, minHeight: 118, alignment: .leading)
+                                .background(Color.kadroSoftWhite)
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(selectedPostCanvas == canvas ? Color.kadroLime : Color.kadroSand.opacity(0.65), lineWidth: selectedPostCanvas == canvas ? 2 : 1)
+                                )
                             }
-                            .disabled(isTranscribingVoiceNote)
+                            .buttonStyle(.plain)
                         }
                     }
-                    
-                    if let lastTranscription {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Транскрибация: \(lastTranscription.model)")
-                                .font(.kadroCaption)
-                                .foregroundColor(.kadroWarmGray)
-                            if lastTranscription.fallbackUsed == true {
-                                Text(lastTranscription.fallbackReason ?? "Включился fallback-маршрут транскрибации")
-                                    .font(.kadroCaption)
-                                    .foregroundColor(.kadroWarning)
-                            }
-                        }
-                    } else if voiceRecorder.completedRecordingURL != nil && !voiceRecorder.isRecording && !isTranscribingVoiceNote {
-                        Button("Повторить транскрибацию") {
-                            guard let url = voiceRecorder.completedRecordingURL else { return }
-                            Task {
-                                await transcribeVoiceNote(from: url)
-                            }
-                        }
-                        .font(.kadroFootnote)
+                }
+            } else if selectedInstagramFormat == .carousel {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Сколько слайдов?")
+                        .font(.kadroTitle3)
                         .foregroundColor(.kadroCharcoal)
+                    
+                    Text("Выберите, сколько слайдов нужно в карусели. Генерация будет ориентироваться именно на это число.")
+                        .font(.kadroCallout)
+                        .foregroundColor(.kadroWarmGray)
+                    
+                    FlowLayout(spacing: 10) {
+                        ForEach(carouselSlideOptions, id: \.self) { count in
+                            KadroChip(title: "\(count)", isSelected: selectedCarouselSlideCount == count) {
+                                selectedCarouselSlideCount = count
+                            }
+                        }
                     }
                 }
             }
-            
-            ideaEditorSection(
-                title: "Расшифровка",
-                placeholder: "После записи здесь появится transcript. Вы сможете отредактировать его перед генерацией."
-            )
-            
-            suggestionChips
         }
     }
     
-    private func ideaEditorSection(title: String?, placeholder: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let title {
-                Text(title)
-                    .font(.kadroFootnote)
-                    .foregroundColor(.kadroWarmGray)
+    // MARK: - Step 3
+    
+    private var ideaStep: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            stepHeader(
+                eyebrow: "Шаг 3",
+                title: ideaStepTitle,
+                subtitle: "Можно написать текстом или просто надиктовать голосом. Всё максимально просто."
+            )
+            
+            ideaEditorSection(
+                title: "Ваш ввод",
+                placeholder: ideaPlaceholder
+            )
+            
+            voiceRecorderCard
+        }
+    }
+    
+    private var voiceRecorderCard: some View {
+        KadroCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Голосовой ввод")
+                            .font(.kadroBodyMedium)
+                            .foregroundColor(.kadroCharcoal)
+                        Text(voiceRecorder.isRecording ? "Говорите свободно — мысль не обязана быть идеальной." : "Запись автоматически превратится в редактируемый текст.")
+                            .font(.kadroFootnote)
+                            .foregroundColor(.kadroWarmGray)
+                    }
+                    Spacer()
+                    KadroStatusBadge(
+                        title: voiceRecorder.isRecording ? "REC" : formattedDuration(voiceRecorder.currentDuration),
+                        color: voiceRecorder.isRecording ? .red : .kadroLime
+                    )
+                }
+                
+                HStack(spacing: 12) {
+                    Button {
+                        Task {
+                            if voiceRecorder.isRecording {
+                                voiceRecorder.stopRecording()
+                            } else {
+                                lastTranscription = nil
+                                lastTranscribedRecordingIdentifier = nil
+                                await voiceRecorder.startRecording()
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: voiceRecorder.isRecording ? "stop.fill" : "mic.fill")
+                            Text(voiceRecorder.isRecording ? "Остановить" : "Записать")
+                        }
+                        .font(.kadroButton)
+                        .foregroundColor(voiceRecorder.isRecording ? .kadroSoftWhite : .kadroCharcoal)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                        .background(voiceRecorder.isRecording ? Color.kadroCharcoal : Color.kadroLime)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .disabled(isTranscribingVoiceNote)
+                    
+                    if voiceRecorder.completedRecordingURL != nil && !voiceRecorder.isRecording {
+                        Button {
+                            resetVoiceNoteState()
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.kadroCharcoal)
+                                .frame(width: 54, height: 54)
+                                .background(Color.kadroIvory)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .disabled(isTranscribingVoiceNote)
+                    }
+                }
+                
+                if isTranscribingVoiceNote {
+                    Text("Добавляем расшифровку в текст…")
+                        .font(.kadroCaption)
+                        .foregroundColor(.kadroWarmGray)
+                } else if let lastTranscription {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Распознано: \(lastTranscription.model)")
+                            .font(.kadroCaption)
+                            .foregroundColor(.kadroWarmGray)
+                        if lastTranscription.fallbackUsed == true {
+                            Text(lastTranscription.fallbackReason ?? "Использован fallback для транскрибации")
+                                .font(.kadroCaption)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
             }
+        }
+    }
+    
+    private func ideaEditorSection(title: String, placeholder: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.kadroFootnote)
+                .foregroundColor(.kadroWarmGray)
             
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $inputText)
                     .font(.kadroBody)
                     .foregroundColor(.kadroCharcoal)
-                    .frame(minHeight: 170)
+                    .frame(minHeight: 220)
                     .scrollContentBackground(.hidden)
                     .padding(16)
                     .background(Color.kadroSoftWhite)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(Color.kadroSand, lineWidth: 1)
                     )
                 
                 if inputText.isEmpty {
                     Text(placeholder)
                         .font(.kadroBody)
-                        .foregroundColor(.kadroWarmGray.opacity(0.7))
+                        .foregroundColor(.kadroWarmGray.opacity(0.72))
                         .padding(.horizontal, 22)
                         .padding(.vertical, 24)
                         .allowsHitTesting(false)
@@ -436,78 +626,42 @@ struct CreateFlowView: View {
                     .font(.kadroCaption)
                     .foregroundColor(.kadroWarmGray)
                 Spacer()
-                if selectedSource == .voiceNote, let completedRecordingURL = voiceRecorder.completedRecordingURL {
-                    Text(completedRecordingURL.lastPathComponent)
+                if lastTranscription != nil {
+                    Text("Голос добавлен")
                         .font(.kadroCaption)
-                        .foregroundColor(.kadroWarmGray)
-                        .lineLimit(1)
+                        .foregroundColor(.kadroLime)
                 }
             }
         }
     }
     
-    private var suggestionChips: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Подсказки")
-                .font(.kadroFootnote)
-                .foregroundColor(.kadroWarmGray)
-            
-            FlowLayout(spacing: 8) {
-                ForEach(["Обучающий", "Личный", "Продающий", "Экспертный", "Вовлекающий"], id: \.self) { chip in
-                    KadroChip(title: chip, isSelected: false) {
-                        inputText += inputText.isEmpty ? chip : ", \(chip)"
-                    }
-                }
-            }
-        }
-    }
+    // MARK: - Step 4
     
-    // MARK: - Step 3: Choose Output
-    
-    private var chooseOutputStep: some View {
+    private var refineStep: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Какой формат?")
-                .font(.kadroTitle)
-                .foregroundColor(.kadroCharcoal)
+            stepHeader(
+                eyebrow: "Шаг 4",
+                title: "Финальные настройки",
+                subtitle: "Последний шаг: задайте настроение текста, цель и визуальный стиль."
+            )
             
-            Text("Выберите тип контента для генерации")
-                .font(.kadroCallout)
-                .foregroundColor(.kadroWarmGray)
-            
-            VStack(spacing: 10) {
-                ForEach(ContentType.allCases) { type in
-                    Button {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            selectedOutputType = type
+            KadroCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Ваш выбор")
+                        .font(.kadroFootnote)
+                        .foregroundColor(.kadroWarmGray)
+                    
+                    FlowLayout(spacing: 8) {
+                        summaryChip("Instagram")
+                        if let selectedInstagramFormat {
+                            summaryChip(selectedInstagramFormat.rawValue)
                         }
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: type.icon)
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundColor(selectedOutputType == type ? .kadroCharcoal : .kadroLime)
-                                .frame(width: 44, height: 44)
-                                .background(selectedOutputType == type ? Color.kadroLime : Color.kadroCharcoal)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            
-                            Text(type.rawValue)
-                                .font(.kadroBodyMedium)
-                                .foregroundColor(.kadroCharcoal)
-                            
-                            Spacer()
-                            
-                            if selectedOutputType == type {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.kadroLime)
-                                    .font(.system(size: 22))
-                            }
+                        if selectedInstagramFormat == .post {
+                            summaryChip(selectedPostCanvas.rawValue + " " + selectedPostCanvas.aspectRatio)
                         }
-                        .padding(14)
-                        .background(Color.kadroSoftWhite)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(selectedOutputType == type ? Color.kadroLime : Color.clear, lineWidth: 2)
-                        )
+                        if selectedInstagramFormat == .carousel {
+                            summaryChip("\(selectedCarouselSlideCount) слайдов")
+                        }
                     }
                 }
             }
@@ -516,7 +670,6 @@ struct CreateFlowView: View {
                 Text("Тон")
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
-                
                 FlowLayout(spacing: 8) {
                     ForEach(ContentTone.allCases) { tone in
                         KadroChip(title: tone.rawValue, isSelected: selectedTone == tone) {
@@ -530,7 +683,6 @@ struct CreateFlowView: View {
                 Text("Цель")
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
-                
                 FlowLayout(spacing: 8) {
                     ForEach(ContentGoal.allCases) { goal in
                         KadroChip(title: goal.rawValue, isSelected: selectedGoal == goal) {
@@ -541,24 +693,17 @@ struct CreateFlowView: View {
             }
             
             stylePackPickerSection
-            
-            KadroCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("AI routing")
-                        .font(.kadroFootnote)
-                        .foregroundColor(.kadroWarmGray)
-                    Text("Основной text/understanding: google/gemini-3-flash-preview")
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroCharcoal)
-                    Text("Транскрибация голосовых заметок: OpenRouter audio input → Supabase Edge Function")
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
-                    Text("Cheap ops: openai/gpt-5.4-nano · Image: google/gemini-3.1-flash-image-preview · Candidate: bytedance/seed-2.0-lite")
-                        .font(.kadroCallout)
-                        .foregroundColor(.kadroWarmGray)
-                }
-            }
         }
+    }
+    
+    private func summaryChip(_ title: String) -> some View {
+        Text(title)
+            .font(.kadroChip)
+            .foregroundColor(.kadroCharcoal)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Color.kadroIvory)
+            .clipShape(Capsule())
     }
     
     private var stylePackPickerSection: some View {
@@ -567,7 +712,7 @@ struct CreateFlowView: View {
                 .font(.kadroTitle3)
                 .foregroundColor(.kadroCharcoal)
             
-            Text("Выберите style pack прямо здесь. После генерации вы увидите visual preview в результате и сможете там же перегенерировать.")
+            Text("Выберите визуальное направление. После генерации изображение можно сразу пересобрать или уточнить промптом.")
                 .font(.kadroCallout)
                 .foregroundColor(.kadroWarmGray)
             
@@ -589,15 +734,16 @@ struct CreateFlowView: View {
                                     .font(.kadroCaption)
                                     .foregroundColor(.kadroWarmGray)
                             }
-                            .padding(12)
-                            .frame(width: 220, alignment: .leading)
+                            .padding(14)
+                            .frame(width: 224, alignment: .leading)
                             .background(Color.kadroSoftWhite)
                             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(selectedStylePackID == pack.id ? Color.kadroLime : Color.kadroSand.opacity(0.6), lineWidth: selectedStylePackID == pack.id ? 2 : 1)
+                                    .stroke(selectedStylePackID == pack.id ? Color.kadroLime : Color.kadroSand.opacity(0.65), lineWidth: selectedStylePackID == pack.id ? 2 : 1)
                             )
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -608,11 +754,11 @@ struct CreateFlowView: View {
     
     private var bottomBar: some View {
         HStack(spacing: 12) {
-            if currentStep != .inputSource {
+            if currentStep != .service {
                 KadroSecondaryButton(title: "Назад") {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                        if let prev = CreateStep(rawValue: currentStep.rawValue - 1) {
-                            currentStep = prev
+                        if let previous = CreateStep(rawValue: currentStep.rawValue - 1) {
+                            currentStep = previous
                         }
                     }
                 }
@@ -659,6 +805,16 @@ struct CreateFlowView: View {
     
     // MARK: - Actions
     
+    private func handleServiceSelection(_ service: CreateService) {
+        if service.isAvailable {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.84)) {
+                selectedService = service
+            }
+        } else {
+            appErrorMessage = "Пока полностью оттачиваем Instagram-first flow. Остальные платформы добавим следующим этапом."
+        }
+    }
+    
     private func handlePrimaryAction() {
         guard !isBusy else { return }
         
@@ -679,8 +835,8 @@ struct CreateFlowView: View {
         appErrorMessage = nil
         
         do {
-            let response = try await transcriptionService.transcribe(audioURL: url, languageHint: transcriptionLanguageHint)
-            inputText = response.transcript
+            let response = try await transcriptionService.transcribe(audioURL: url, languageHint: profiles.first?.language ?? "Русский")
+            mergeTranscript(response.transcript)
             lastTranscription = response
             lastTranscribedRecordingIdentifier = url.lastPathComponent
         } catch {
@@ -690,9 +846,20 @@ struct CreateFlowView: View {
         isTranscribingVoiceNote = false
     }
     
+    private func mergeTranscript(_ transcript: String) {
+        let trimmedTranscript = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTranscript.isEmpty else { return }
+        let current = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if current.isEmpty {
+            inputText = trimmedTranscript
+        } else if !current.contains(trimmedTranscript) {
+            inputText = current + "\n\n" + trimmedTranscript
+        }
+    }
+    
     @MainActor
     private func generateContent() async {
-        guard let selectedSource else { return }
+        guard let outputType = resolvedOutputType else { return }
         let trimmedInput = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedInput.isEmpty else { return }
         
@@ -700,12 +867,15 @@ struct CreateFlowView: View {
         appErrorMessage = nil
         
         let context = KadroGenerationContext(
-            inputSource: selectedSource.rawValue,
+            inputSource: lastTranscription == nil ? "Typed idea" : "Voice + Text",
             rawInput: trimmedInput,
-            outputType: selectedOutputType,
+            outputType: outputType,
             tone: selectedTone,
             goal: selectedGoal,
-            platform: selectedOutputType.defaultPlatform,
+            platform: .instagram,
+            formatDetail: resolvedFormatDetail,
+            preferredImageAspectRatio: resolvedPreferredImageAspectRatio,
+            desiredSlideCount: resolvedDesiredSlideCount,
             brandProfile: profiles.first
         )
         
@@ -717,8 +887,8 @@ struct CreateFlowView: View {
             modelContext.insert(project)
             try modelContext.save()
             latestResult = GeneratedContentResult(project: project, payload: payload)
-            resetFlow()
             appState.selectedTab = .content
+            resetFlow()
         } catch {
             appErrorMessage = error.localizedDescription
         }
@@ -730,15 +900,33 @@ struct CreateFlowView: View {
         if selectedStylePackID.isEmpty {
             selectedStylePackID = stylePacks.first?.id ?? ""
         }
+        
         guard let draft = appState.consumeCreateDraft() else { return }
+        selectedService = .instagram
+        
         if let outputType = draft.outputType {
-            selectedOutputType = outputType
+            switch outputType {
+            case .post:
+                selectedInstagramFormat = .post
+            case .carousel:
+                selectedInstagramFormat = .carousel
+            case .stories:
+                selectedInstagramFormat = .story
+            case .reels, .contentPack:
+                selectedInstagramFormat = nil
+            }
         }
-        if let source = draft.source {
-            selectedSource = source
-        }
+        
         if !draft.seedText.isEmpty {
             inputText = draft.seedText
+        }
+        
+        if selectedService != nil, selectedInstagramFormat != nil, !inputText.isEmpty {
+            currentStep = .refine
+        } else if selectedService != nil, selectedInstagramFormat != nil {
+            currentStep = .idea
+        } else if selectedService != nil {
+            currentStep = .format
         }
     }
     
@@ -747,28 +935,64 @@ struct CreateFlowView: View {
         return String(format: "%01d:%02d", seconds / 60, seconds % 60)
     }
     
-    private func resetVoiceNoteState(keepTranscript: Bool) {
+    private func resetVoiceNoteState() {
         voiceRecorder.discardRecording()
         lastTranscription = nil
         lastTranscribedRecordingIdentifier = nil
         isTranscribingVoiceNote = false
-        if !keepTranscript {
-            inputText = ""
-        }
     }
     
     private func resetFlow() {
-        currentStep = .inputSource
-        selectedSource = nil
+        currentStep = .service
+        selectedService = nil
+        selectedInstagramFormat = nil
+        selectedPostCanvas = .portrait
+        selectedCarouselSlideCount = 7
         inputText = ""
-        selectedOutputType = .post
         selectedTone = nil
         selectedGoal = nil
-        resetVoiceNoteState(keepTranscript: false)
+        resetVoiceNoteState()
+    }
+    
+    private func stepHeader(eyebrow: String, title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(eyebrow.uppercased())
+                .font(.kadroCaption)
+                .foregroundColor(.kadroWarmGray)
+            Text(title)
+                .font(.kadroTitle)
+                .foregroundColor(.kadroCharcoal)
+            Text(subtitle)
+                .font(.kadroCallout)
+                .foregroundColor(.kadroWarmGray)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private var ideaStepTitle: String {
+        switch selectedInstagramFormat {
+        case .post: return "О чём будет пост?"
+        case .story: return "Что хотим сказать в сторис?"
+        case .carousel: return "О чём будет карусель?"
+        case .none: return "О чём будет контент?"
+        }
+    }
+    
+    private var ideaPlaceholder: String {
+        switch selectedInstagramFormat {
+        case .post:
+            return "Например: хочу короткий и стильный пост о том, почему экспертному бренду нужен визуальный ритм, а не просто красивые картинки"
+        case .story:
+            return "Например: хочу сторис о запуске продукта, чтобы мягко прогреть аудиторию и показать ценность"
+        case .carousel:
+            return "Например: хочу карусель про 5 ошибок в визуале Instagram, которые делают контент дешевле на вид"
+        case .none:
+            return "Опишите идею в свободной форме"
+        }
     }
 }
 
-// MARK: - Flow Layout (simple wrapping layout)
+// MARK: - Flow Layout
 
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8

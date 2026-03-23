@@ -44,6 +44,20 @@ private extension KadroStyleVisualTarget {
     }
 }
 
+// MARK: - Editable Text Field
+
+private enum EditableTextField: String, Identifiable {
+    case rawInput, hook, mainText, cta, shortVersion, caption, scriptBeats, onScreenText, coverIdea, hashtags
+    var id: String { rawValue }
+}
+
+private struct TextEditRequest: Identifiable {
+    let id = UUID()
+    let title: String
+    let field: EditableTextField
+    var text: String
+}
+
 struct ContentProjectDetailView: View {
     let project: ContentProject
     
@@ -59,9 +73,15 @@ struct ContentProjectDetailView: View {
     @State private var visualPromptText: String = ""
     @State private var visualLoadingTitle: String = "Генерируем визуал"
     @State private var visualLoadingSubtitle: String = "Собираем reference-guided image generation prompt на основе style pack и ваших референсов."
+    @State private var textEditRequest: TextEditRequest?
+    @State private var copiedFieldID: EditableTextField?
     
     private let aiService = KadroAIService()
     private let styleImageService = KadroStyleImageService()
+    
+    private var isInstagramPost: Bool {
+        project.platform == .instagram && project.type == .post
+    }
     
     private var brandProfile: BrandProfile? {
         profiles.first
@@ -90,51 +110,61 @@ struct ContentProjectDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                heroCard
-                visualGenerationCard
-                
-                if !project.rawInput.isEmpty {
-                    textSection(title: "Исходная идея", body: project.rawInput)
-                }
-                
-                if let hook = project.hook, !hook.isEmpty {
-                    textSection(title: "Хук", body: hook)
-                }
-                
-                if let mainText = project.mainText, !mainText.isEmpty {
-                    textSection(title: project.type == .stories ? "Stories draft" : "Основной текст", body: mainText)
-                }
-                
-                if let cta = project.cta, !cta.isEmpty {
-                    textSection(title: "CTA", body: cta)
-                }
-                
-                if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
-                    textSection(title: "Короткая версия", body: shortVersion)
-                }
-                
-                if let caption = project.caption, !caption.isEmpty {
-                    textSection(title: "Подпись", body: caption)
-                }
-                
-                if let hashtags = project.hashtags, !hashtags.isEmpty {
-                    hashtagsSection(hashtags)
-                }
-                
-                if !sortedSlides.isEmpty {
-                    slidesSection(sortedSlides)
-                }
-                
-                if let scriptBeats = project.scriptBeats, !scriptBeats.isEmpty {
-                    textSection(title: "Сценарные биты", body: scriptBeats)
-                }
-                
-                if let onScreenText = project.onScreenText, !onScreenText.isEmpty {
-                    textSection(title: "Текст на экране", body: onScreenText)
-                }
-                
-                if let coverIdea = project.coverIdea, !coverIdea.isEmpty {
-                    textSection(title: "Идея обложки", body: coverIdea)
+                if isInstagramPost {
+                    visualGenerationCard
+                    if let mainText = project.mainText, !mainText.isEmpty {
+                        textSection(title: "Текст поста", body: mainText, field: .mainText)
+                    }
+                    if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
+                        textSection(title: "Короткая версия", body: shortVersion, field: .shortVersion)
+                    }
+                } else {
+                    heroCard
+                    visualGenerationCard
+                    
+                    if !project.rawInput.isEmpty {
+                        textSection(title: "Исходная идея", body: project.rawInput, field: .rawInput)
+                    }
+                    
+                    if let hook = project.hook, !hook.isEmpty {
+                        textSection(title: "Хук", body: hook, field: .hook)
+                    }
+                    
+                    if let mainText = project.mainText, !mainText.isEmpty {
+                        textSection(title: project.type == .stories ? "Stories draft" : "Основной текст", body: mainText, field: .mainText)
+                    }
+                    
+                    if let cta = project.cta, !cta.isEmpty {
+                        textSection(title: "CTA", body: cta, field: .cta)
+                    }
+                    
+                    if let shortVersion = project.shortVersion, !shortVersion.isEmpty {
+                        textSection(title: "Короткая версия", body: shortVersion, field: .shortVersion)
+                    }
+                    
+                    if let caption = project.caption, !caption.isEmpty {
+                        textSection(title: "Подпись", body: caption, field: .caption)
+                    }
+                    
+                    if let hashtags = project.hashtags, !hashtags.isEmpty {
+                        hashtagsSection(hashtags)
+                    }
+                    
+                    if !sortedSlides.isEmpty {
+                        slidesSection(sortedSlides)
+                    }
+                    
+                    if let scriptBeats = project.scriptBeats, !scriptBeats.isEmpty {
+                        textSection(title: "Сценарные биты", body: scriptBeats, field: .scriptBeats)
+                    }
+                    
+                    if let onScreenText = project.onScreenText, !onScreenText.isEmpty {
+                        textSection(title: "Текст на экране", body: onScreenText, field: .onScreenText)
+                    }
+                    
+                    if let coverIdea = project.coverIdea, !coverIdea.isEmpty {
+                        textSection(title: "Идея обложки", body: coverIdea, field: .coverIdea)
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -189,6 +219,14 @@ struct ContentProjectDetailView: View {
                 Text(errorMessage ?? "Попробуйте ещё раз.")
             }
         )
+        .sheet(item: $textEditRequest) { request in
+            TextEditSheet(
+                title: request.title,
+                text: request.text
+            ) { updatedText in
+                saveEditedText(updatedText, for: request.field)
+            }
+        }
         .overlay {
             if isRegenerating || isGeneratingVisual {
                 loadingOverlay
@@ -237,7 +275,7 @@ struct ContentProjectDetailView: View {
     private var visualGenerationCard: some View {
         KadroCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Visual draft")
+                Text(isInstagramPost ? "Изображение поста" : "Visual draft")
                     .font(.kadroTitle3)
                     .foregroundColor(.kadroCharcoal)
                 
@@ -268,10 +306,10 @@ struct ContentProjectDetailView: View {
                         visualPromptText = project.generatedCoverImagePrompt ?? ""
                         visualPromptRequest = DetailVisualPromptRequest(
                             target: .cover,
-                            title: project.generatedCoverImageData == nil ? "Создать visual cover" : "Перегенерировать cover"
+                            title: coverButtonTitle
                         )
                     } label: {
-                        Text(project.generatedCoverImageData == nil ? "Создать visual cover" : "Перегенерировать cover")
+                        Text(coverButtonTitle)
                             .font(.kadroButton)
                             .foregroundColor(.kadroCharcoal)
                             .frame(maxWidth: .infinity)
@@ -404,13 +442,54 @@ struct ContentProjectDetailView: View {
         }
     }
     
-    private func textSection(title: String, body: String) -> some View {
+    private func textSection(title: String, body: String, field: EditableTextField) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            KadroSectionHeader(title: title)
+            HStack {
+                KadroSectionHeader(title: title)
+                Spacer()
+                
+                // Copy button
+                Button {
+                    UIPasteboard.general.string = body
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        copiedFieldID = field
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            if copiedFieldID == field {
+                                copiedFieldID = nil
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: copiedFieldID == field ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 12, weight: .medium))
+                        if copiedFieldID == field {
+                            Text("Скопировано")
+                                .font(.kadroCaption)
+                        }
+                    }
+                    .foregroundColor(copiedFieldID == field ? .kadroSuccess : .kadroWarmGray)
+                }
+                .buttonStyle(.plain)
+                
+                // Edit button
+                Button {
+                    textEditRequest = TextEditRequest(title: title, field: field, text: body)
+                } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.kadroWarmGray)
+                }
+                .buttonStyle(.plain)
+            }
             KadroCard {
                 Text(body)
                     .font(.kadroBody)
                     .foregroundColor(.kadroCharcoal)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
             }
         }
     }
@@ -427,6 +506,13 @@ struct ContentProjectDetailView: View {
             parts.append(refs)
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+    
+    private var coverButtonTitle: String {
+        if isInstagramPost {
+            return project.generatedCoverImageData == nil ? "Создать изображение" : "Перегенерировать изображение"
+        }
+        return project.generatedCoverImageData == nil ? "Создать visual cover" : "Перегенерировать cover"
     }
     
     private func slideMetaText(_ slide: CarouselSlide) -> String? {
@@ -452,6 +538,29 @@ struct ContentProjectDetailView: View {
         }
     }
     
+    // MARK: - Save Edited Text
+    
+    private func saveEditedText(_ newText: String, for field: EditableTextField) {
+        let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        
+        switch field {
+        case .rawInput:     project.rawInput = trimmed
+        case .hook:         project.hook = trimmed
+        case .mainText:     project.mainText = trimmed
+        case .cta:          project.cta = trimmed
+        case .shortVersion: project.shortVersion = trimmed
+        case .caption:      project.caption = trimmed
+        case .scriptBeats:  project.scriptBeats = trimmed
+        case .onScreenText: project.onScreenText = trimmed
+        case .coverIdea:    project.coverIdea = trimmed
+        case .hashtags:     project.hashtags = trimmed
+        }
+        
+        project.updatedAt = Date()
+        try? modelContext.save()
+    }
+    
     @MainActor
     private func regenerateProject() async {
         guard !isRegenerating else { return }
@@ -471,6 +580,9 @@ struct ContentProjectDetailView: View {
             tone: project.tone,
             goal: project.goal,
             platform: project.platform,
+            formatDetail: project.formatDetail,
+            preferredImageAspectRatio: project.preferredImageAspectRatio,
+            desiredSlideCount: project.desiredSlideCount,
             brandProfile: profiles.first
         )
         

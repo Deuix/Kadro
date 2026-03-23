@@ -132,7 +132,7 @@ final class KadroStyleImageService {
             rawInput: project.rawInput,
             outputType: project.type.apiValue,
             visualKind: visualKind,
-            aspectRatio: aspectRatio(for: project.type),
+            aspectRatio: aspectRatio(for: project),
             primaryText: primaryText,
             secondaryText: secondaryText,
             stylePackID: stylePack.id,
@@ -250,8 +250,12 @@ final class KadroStyleImageService {
         return nil
     }
     
-    private func aspectRatio(for type: ContentType) -> String {
-        switch type {
+    private func aspectRatio(for project: ContentProject) -> String {
+        if let preferred = project.preferredImageAspectRatio?.trimmingCharacters(in: .whitespacesAndNewlines), !preferred.isEmpty {
+            return preferred
+        }
+        
+        switch project.type {
         case .reels, .stories:
             return "9:16"
         case .post, .carousel, .contentPack:

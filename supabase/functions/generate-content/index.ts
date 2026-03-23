@@ -13,7 +13,7 @@ const OPENROUTER_IMAGE_MODEL = Deno.env.get('OPENROUTER_IMAGE_MODEL') ?? 'google
 const OPENROUTER_CANDIDATE_MODEL = Deno.env.get('OPENROUTER_CANDIDATE_MODEL') ?? 'bytedance/seed-2.0-lite'
 const OPENROUTER_APP_URL = Deno.env.get('OPENROUTER_APP_URL') ?? 'https://kadro.app'
 const OPENROUTER_APP_NAME = Deno.env.get('OPENROUTER_APP_NAME') ?? 'Kadro'
-const PROMPT_VERSION = 'sprint4-v2'
+const PROMPT_VERSION = 'sprint4-v3-instagram-first'
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,6 +27,9 @@ type GenerateContentBody = {
   tone?: string
   goal?: string
   platform?: string
+  format_detail?: string
+  preferred_image_aspect_ratio?: string
+  desired_slide_count?: number
   include_candidate_preview?: boolean
   brand_profile?: {
     brand_name?: string
@@ -225,6 +228,9 @@ Deno.serve(async (req) => {
     tone: body.tone ?? '',
     goal: body.goal ?? '',
     platform: body.platform ?? 'Instagram',
+    format_detail: body.format_detail ?? '',
+    preferred_image_aspect_ratio: body.preferred_image_aspect_ratio ?? '',
+    desired_slide_count: body.desired_slide_count ?? 0,
     include_candidate_preview: body.include_candidate_preview ?? false,
     brand_profile: body.brand_profile ?? {},
   }
@@ -301,7 +307,7 @@ Deno.serve(async (req) => {
 async function generateWithFallback(payload: Record<string, unknown>): Promise<GenerationAttempt> {
   try {
     const response = await callOpenRouter(OPENROUTER_TEXT_MODEL, payload)
-    const generated = extractStructuredContent(response)
+    const generated = normalizeGeneratedPayload(extractStructuredContent(response), payload)
     return {
       response,
       generated,
@@ -317,7 +323,7 @@ async function generateWithFallback(payload: Record<string, unknown>): Promise<G
 
     try {
       const response = await callOpenRouter(OPENROUTER_CANDIDATE_MODEL, payload)
-      const generated = extractStructuredContent(response)
+      const generated = normalizeGeneratedPayload(extractStructuredContent(response), payload)
       return {
         response,
         generated,
@@ -397,6 +403,56 @@ function extractStructuredContent(response: OpenRouterResponse) {
   }
 }
 
+function normalizeGeneratedPayload(
+  generated: Record<string, unknown>,
+  payload: Record<string, unknown>
+) {
+  const outputType = typeof payload.output_type === 'string' ? payload.output_type : ''
+  const platform = typeof payload.platform === 'string' ? payload.platform.toLowerCase() : ''
+  const desiredSlideCount = typeof payload.desired_slide_count === 'number'
+    ? Math.max(0, Math.min(10, Math.round(payload.desired_slide_count)))
+    : 0
+
+  if (outputType === 'post' && platform === 'instagram') {
+    return {
+      ...generated,
+      hook: '',
+      cta: '',
+      caption: '',
+      hashtags: [],
+      variants: [],
+      suggested_next_actions: [],
+      carousel: {
+        cover_title: '',
+        slides: [],
+      },
+      reels: {
+        hook: '',
+        script_beats: [],
+        on_screen_text: [],
+        caption: '',
+        cover_idea: '',
+      },
+      stories: [],
+    }
+  }
+
+  if (outputType === 'carousel' && desiredSlideCount > 0) {
+    const carousel = generated.carousel as Record<string, unknown> | undefined
+    const slides = Array.isArray(carousel?.slides) ? carousel?.slides : []
+    
+    return {
+      ...generated,
+      carousel: {
+        cover_title: typeof carousel?.cover_title === 'string' ? carousel.cover_title : '',
+        slides: slides.slice(0, desiredSlideCount),
+      },
+    }
+  }
+
+  return generated
+}
+
 function buildSystemPrompt() {
   return [
     'You are Kadro, a premium iPhone-first AI content strategist for creators, experts, and small businesses.',
@@ -407,6 +463,7 @@ function buildSystemPrompt() {
     'Keep the output highly structured and usable in a mobile editor.',
     'Do not use markdown. Do not wrap JSON in code fences.',
     'If a section is not relevant, return an empty string or empty array, not null.',
+    'For simple Instagram posts, keep the package minimal and elegant.',
     'For carousel outputs keep slides compact and legible.',
     'For reels outputs make beats punchy and easy to film.',
     'For stories outputs make frames short, sequential, and interactive.',
@@ -422,7 +479,9 @@ function buildUserPrompt(payload: Record<string, unknown>) {
     'Use brand words when useful and avoid banned words if supplied.',
     'If brand_profile contains a selected style pack, preserve that creative direction in carousel covers, visual suggestions, and aesthetic language.',
     'Treat style_pack_prompt_template as a visual north star and style_pack_negative_prompt as constraints for future image generation.',
-    'If output_type is post, prioritize hook + main_text + cta + short_version + hashtags.',
+    'If output_type is post and platform is Instagram, prioritize one polished main_text and one shorter short_version. Keep hook, cta, caption, hashtags, carousel, reels, stories, variants, and suggested_next_actions empty unless the user explicitly asks for them.',
+    'If output_type is post and preferred_image_aspect_ratio is 1:1, keep the concept especially compact and punchy. If it is 4:5, allow a little more breathing room but stay concise.',
+    'If output_type is carousel and desired_slide_count is provided, return exactly that many slides.',
     'If output_type is carousel, prioritize cover_title + 5-8 slides with concise copy.',
     'If output_type is reels, prioritize hook + script_beats + on_screen_text + caption + cover_idea.',
     'If output_type is stories, prioritize 4-6 sequential story frames.',

@@ -28,6 +28,9 @@ final class KadroAIService {
             tone: context.tone?.rawValue ?? "",
             goal: context.goal?.rawValue ?? "",
             platform: context.platform.rawValue,
+            formatDetail: context.formatDetail ?? "",
+            preferredImageAspectRatio: context.preferredImageAspectRatio ?? "",
+            desiredSlideCount: context.desiredSlideCount ?? 0,
             brandProfile: KadroBrandSnapshot(profile: context.brandProfile),
             includeCandidatePreview: false
         )

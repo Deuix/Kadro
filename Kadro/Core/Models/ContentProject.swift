@@ -79,6 +79,9 @@ final class ContentProject {
     var platform: ContentPlatform
     var tone: ContentTone?
     var goal: ContentGoal?
+    var formatDetail: String?
+    var preferredImageAspectRatio: String?
+    var desiredSlideCount: Int?
     var selectedStylePackID: String?
     var selectedStylePackName: String?
     
@@ -128,6 +131,9 @@ final class ContentProject {
         self.type = type
         self.status = status
         self.platform = platform
+        self.formatDetail = nil
+        self.preferredImageAspectRatio = nil
+        self.desiredSlideCount = nil
         self.selectedStylePackID = nil
         self.selectedStylePackName = nil
         self.generatedCoverImageData = nil

@@ -53,6 +53,7 @@ struct GeneratedContentView: View {
     private let styleImageService = KadroStyleImageService()
     
     private var project: ContentProject { result.project }
+    private var isInstagramPost: Bool { project.platform == .instagram && project.type == .post }
     private var slides: [CarouselSlide] { (project.slides ?? []).sorted { $0.order < $1.order } }
     private var brandProfile: BrandProfile? { profiles.first }
     private var selectedStylePack: StylePack? { StylePackLibrary.pack(for: project.selectedStylePackID) }
@@ -68,21 +69,25 @@ struct GeneratedContentView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    heroCard
-                    visualPreviewSection
-                    
-                    if !result.payload.hook.isEmpty { textSection(title: "Хук", body: result.payload.hook) }
-                    if !result.payload.mainText.isEmpty { textSection(title: "Основной текст", body: result.payload.mainText) }
-                    if !result.payload.cta.isEmpty { textSection(title: "CTA", body: result.payload.cta) }
-                    if !result.payload.shortVersion.isEmpty { textSection(title: "Короткая версия", body: result.payload.shortVersion) }
-                    if !result.payload.caption.isEmpty { textSection(title: "Подпись", body: result.payload.caption) }
-                    if !result.payload.hashtags.isEmpty { tagSection }
-                    if !result.payload.carousel.slides.isEmpty { carouselSection }
-                    if !result.payload.reels.scriptBeats.isEmpty || !result.payload.reels.onScreenText.isEmpty || !result.payload.reels.coverIdea.isEmpty { reelsSection }
-                    if !result.payload.stories.isEmpty { storiesSection }
-                    if !result.payload.variants.isEmpty { variantsSection }
-                    if !result.payload.suggestedNextActions.isEmpty { nextActionsSection }
-                    metadataSection
+                    if isInstagramPost {
+                        instagramPostResultContent
+                    } else {
+                        heroCard
+                        visualPreviewSection
+                        
+                        if !result.payload.hook.isEmpty { textSection(title: "Хук", body: result.payload.hook) }
+                        if !result.payload.mainText.isEmpty { textSection(title: "Основной текст", body: result.payload.mainText) }
+                        if !result.payload.cta.isEmpty { textSection(title: "CTA", body: result.payload.cta) }
+                        if !result.payload.shortVersion.isEmpty { textSection(title: "Короткая версия", body: result.payload.shortVersion) }
+                        if !result.payload.caption.isEmpty { textSection(title: "Подпись", body: result.payload.caption) }
+                        if !result.payload.hashtags.isEmpty { tagSection }
+                        if !result.payload.carousel.slides.isEmpty { carouselSection }
+                        if !result.payload.reels.scriptBeats.isEmpty || !result.payload.reels.onScreenText.isEmpty || !result.payload.reels.coverIdea.isEmpty { reelsSection }
+                        if !result.payload.stories.isEmpty { storiesSection }
+                        if !result.payload.variants.isEmpty { variantsSection }
+                        if !result.payload.suggestedNextActions.isEmpty { nextActionsSection }
+                        metadataSection
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
@@ -135,6 +140,18 @@ struct GeneratedContentView: View {
         }
     }
     
+    private var instagramPostResultContent: some View {
+        VStack(spacing: 20) {
+            visualPreviewSection
+            if !result.payload.mainText.isEmpty {
+                textSection(title: "Текст поста", body: result.payload.mainText)
+            }
+            if !result.payload.shortVersion.isEmpty {
+                textSection(title: "Короткая версия", body: result.payload.shortVersion)
+            }
+        }
+    }
+    
     private var heroCard: some View {
         KadroCard {
             VStack(alignment: .leading, spacing: 12) {
@@ -154,20 +171,22 @@ struct GeneratedContentView: View {
     private var visualPreviewSection: some View {
         KadroCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Visual preview").font(.kadroTitle3).foregroundColor(.kadroCharcoal)
+                Text(isInstagramPost ? "Изображение поста" : "Visual preview").font(.kadroTitle3).foregroundColor(.kadroCharcoal)
                 
                 if let selectedStylePack {
                     Text("Style pack: \(selectedStylePack.displayName)").font(.kadroBodyMedium).foregroundColor(.kadroCharcoal)
-                    Text("References found: \(selectedStylePackReferenceCount)").font(.kadroFootnote).foregroundColor(.kadroWarmGray)
+                    if !isInstagramPost {
+                        Text("References found: \(selectedStylePackReferenceCount)").font(.kadroFootnote).foregroundColor(.kadroWarmGray)
+                    }
                     
                     if let coverPreviewAsset {
                         KadroPreviewableGeneratedImage(asset: coverPreviewAsset)
                     }
                     
                     HStack(spacing: 10) {
-                        actionButton(title: project.generatedCoverImageData == nil ? "Создать cover" : "Перегенерировать cover") {
+                        actionButton(title: coverButtonTitle) {
                             visualPromptText = project.generatedCoverImagePrompt ?? ""
-                            visualPromptRequest = VisualPromptRequest(target: .cover, title: project.generatedCoverImageData == nil ? "Создать cover" : "Перегенерировать cover")
+                            visualPromptRequest = VisualPromptRequest(target: .cover, title: coverButtonTitle)
                         }
                         
                         if !slides.isEmpty {
@@ -181,6 +200,13 @@ struct GeneratedContentView: View {
                 }
             }
         }
+    }
+    
+    private var coverButtonTitle: String {
+        if isInstagramPost {
+            return project.generatedCoverImageData == nil ? "Создать изображение" : "Перегенерировать изображение"
+        }
+        return project.generatedCoverImageData == nil ? "Создать cover" : "Перегенерировать cover"
     }
     
     private var tagSection: some View {

@@ -58,6 +58,9 @@ struct KadroGenerationContext {
     let tone: ContentTone?
     let goal: ContentGoal?
     let platform: ContentPlatform
+    let formatDetail: String?
+    let preferredImageAspectRatio: String?
+    let desiredSlideCount: Int?
     let brandProfile: BrandProfile?
 }
 
@@ -68,6 +71,9 @@ struct KadroGenerationRequest: Encodable {
     let tone: String
     let goal: String
     let platform: String
+    let formatDetail: String
+    let preferredImageAspectRatio: String
+    let desiredSlideCount: Int
     let brandProfile: KadroBrandSnapshot
     let includeCandidatePreview: Bool
 }
@@ -179,6 +185,9 @@ extension ContentProject {
         
         project.tone = context.tone
         project.goal = context.goal
+        project.formatDetail = context.formatDetail
+        project.preferredImageAspectRatio = context.preferredImageAspectRatio
+        project.desiredSlideCount = context.desiredSlideCount
         project.hook = payload.hook
         project.mainText = payload.mainText.isEmpty ? payload.summary : payload.mainText
         project.cta = payload.cta
@@ -212,6 +221,17 @@ extension ContentProject {
                 "Сторис \(index + 1): \(frame.title)\n\(frame.body)\nСтикер: \(frame.stickerIdea)"
             }.joined(separator: "\n\n")
             project.mainText = storyText
+        }
+        
+        if context.outputType == .post, context.platform == .instagram {
+            project.hook = nil
+            project.cta = nil
+            project.hashtags = nil
+            project.caption = nil
+            project.scriptBeats = nil
+            project.onScreenText = nil
+            project.coverIdea = nil
+            project.slides = []
         }
         
         return project
