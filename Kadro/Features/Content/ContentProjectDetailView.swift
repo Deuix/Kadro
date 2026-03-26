@@ -153,7 +153,7 @@ struct ContentProjectDetailView: View {
                         
                         Spacer(minLength: 80)
                     }
-                    .padding(.bottom, 60)
+                    .padding(.bottom, 120)
                 }
                 .background(Color.kadroBackground(for: colorScheme))
                 
@@ -418,8 +418,8 @@ struct ContentProjectDetailView: View {
     private func bentoSlideCard(_ slide: CarouselSlide) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let asset = slidePreviewAsset(for: slide) {
-                KadroPreviewableGeneratedImage(asset: asset, cornerRadius: 20)
-                    .padding(8)
+                Image(uiImage: UIImage(data: slide.generatedImageData!)!).resizable().scaledToFill().frame(width: 240, height: 260).clipped()
+                    .padding(0)
             } else {
                 ZStack {
                     Color.kadroBackground(for: colorScheme)
@@ -443,7 +443,7 @@ struct ContentProjectDetailView: View {
                 }
                 .frame(height: 200)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .padding(8)
+                .padding(0)
             }
             
             VStack(alignment: .leading, spacing: 8) {

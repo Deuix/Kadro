@@ -100,9 +100,10 @@ Deno.serve(async (req) => {
   const prompt = buildPrompt(body)
   const referenceFilenames = references.map((reference) => reference.filename ?? '').filter(Boolean)
   const visualKind = body.visual_kind ?? 'cover'
+  const shouldBypassCodefastForExactRatio = prefersExactAspectRatio(body.aspect_ratio) && Boolean(OPENROUTER_API_KEY)
   let codefastErrorMessage: string | null = null
 
-  if (CODEFAST_API_KEY) {
+  if (CODEFAST_API_KEY && !shouldBypassCodefastForExactRatio) {
     try {
       const result = await generateWithCodefast(body, prompt)
       return json({
@@ -320,9 +321,11 @@ function buildPrompt(body: GenerateStyleVisualBody): string {
   const negativePrompt = body.style_pack_negative_prompt?.trim() || ''
   const rawInput = body.raw_input?.trim() || ''
   const promptOverride = body.prompt_override?.trim() || ''
+  const aspectRatioInstruction = buildAspectRatioInstruction(body.aspect_ratio)
 
   const promptParts = [
     `Create a premium ${visualKind} for an Instagram ${outputType}.`,
+    aspectRatioInstruction,
     body.base_image_data_url
       ? `Treat the provided base image as the current carousel art direction. Preserve the same visual family, palette discipline, hierarchy logic, and premium feel while creating a fresh composition.`
       : `Use the attached reference images only as inspiration for visual language, spacing, typography mood, palette discipline, and composition rhythm.`,
@@ -342,6 +345,31 @@ function buildPrompt(body: GenerateStyleVisualBody): string {
   ].filter(Boolean)
 
   return promptParts.join(' ')
+}
+
+function buildAspectRatioInstruction(aspectRatio?: string) {
+  switch ((aspectRatio || '').trim()) {
+    case '1:1':
+      return 'Canvas must be square 1:1 for an Instagram feed post. Do not compose it like a story.'
+    case '4:5':
+      return 'Canvas must be 4:5 feed portrait. This is not a 9:16 story layout.'
+    case '9:16':
+      return 'Canvas must be full-height 9:16 story format.'
+    case '16:9':
+      return 'Canvas must be 16:9 landscape.'
+    default:
+      return ''
+  }
+}
+
+function prefersExactAspectRatio(aspectRatio?: string) {
+  switch ((aspectRatio || '').trim()) {
+    case '4:5':
+    case '9:16':
+      return true
+    default:
+      return false
+  }
 }
 
 function mapAspectRatio(aspectRatio?: string) {

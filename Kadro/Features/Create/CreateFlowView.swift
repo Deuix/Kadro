@@ -75,7 +75,7 @@ enum InstagramCreateFormat: String, CaseIterable, Identifiable {
     }
 }
 
-enum InstagramPostCanvas: String, CaseIterable, Identifiable {
+enum InstagramImageCanvas: String, CaseIterable, Identifiable {
     case square = "Квадрат"
     case portrait = "Вертикальный"
     
@@ -95,10 +95,17 @@ enum InstagramPostCanvas: String, CaseIterable, Identifiable {
         }
     }
     
-    var formatDetail: String {
+    var postFormatDetail: String {
         switch self {
         case .square: return "instagram_post_square"
         case .portrait: return "instagram_post_portrait"
+        }
+    }
+    
+    var carouselFormatDetail: String {
+        switch self {
+        case .square: return "instagram_carousel_square"
+        case .portrait: return "instagram_carousel_portrait"
         }
     }
 }
@@ -115,7 +122,8 @@ struct CreateFlowView: View {
     @State private var selectedService: CreateService?
     @State private var selectedContentLanguage: String = "Русский"
     @State private var selectedInstagramFormat: InstagramCreateFormat?
-    @State private var selectedPostCanvas: InstagramPostCanvas = .portrait
+    @State private var selectedPostCanvas: InstagramImageCanvas = .portrait
+    @State private var selectedCarouselCanvas: InstagramImageCanvas = .portrait
     @State private var selectedCarouselSlideCount: Int = 7
     @State private var inputText: String = ""
     @State private var selectedTone: ContentTone?
@@ -145,9 +153,9 @@ struct CreateFlowView: View {
     
     private var resolvedFormatDetail: String? {
         switch selectedInstagramFormat {
-        case .post: return selectedPostCanvas.formatDetail
+        case .post: return selectedPostCanvas.postFormatDetail
         case .story: return "instagram_story"
-        case .carousel: return "instagram_carousel"
+        case .carousel: return selectedCarouselCanvas.carouselFormatDetail
         case .none: return nil
         }
     }
@@ -156,7 +164,7 @@ struct CreateFlowView: View {
         switch selectedInstagramFormat {
         case .post: return selectedPostCanvas.aspectRatio
         case .story: return "9:16"
-        case .carousel: return "4:5"
+        case .carousel: return selectedCarouselCanvas.aspectRatio
         case .none: return nil
         }
     }
@@ -366,36 +374,10 @@ struct CreateFlowView: View {
             .padding(.horizontal, 24)
             
             if selectedInstagramFormat == .post {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(L10n.Create.canvasType.uppercased())
-                        .font(.system(size: 11, weight: .bold))
-                        .tracking(1.5)
-                        .foregroundColor(.kadroSecondary(for: colorScheme))
-                        .padding(.horizontal, 24)
-                    
-                    HStack(spacing: 12) {
-                        ForEach(InstagramPostCanvas.allCases) { canvas in
-                            Button {
-                                selectedPostCanvas = canvas
-                            } label: {
-                                Text(canvas.displayName)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(selectedPostCanvas == canvas ? .kadroCharcoal : .kadroSecondary(for: colorScheme))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(selectedPostCanvas == canvas ? Color.kadroLime : Color.kadroCard(for: colorScheme))
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(selectedPostCanvas == canvas ? Color.clear : Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
-                                    )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                }
+                canvasSelectionSection(selectedCanvas: $selectedPostCanvas)
             } else if selectedInstagramFormat == .carousel {
+                canvasSelectionSection(selectedCanvas: $selectedCarouselCanvas)
+                
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L10n.Create.slideCount.uppercased())
                         .font(.system(size: 11, weight: .bold))
@@ -424,6 +406,38 @@ struct CreateFlowView: View {
                     }
                 }
             }
+        }
+    }
+    
+    private func canvasSelectionSection(selectedCanvas: Binding<InstagramImageCanvas>) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(L10n.Create.canvasType.uppercased())
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.5)
+                .foregroundColor(.kadroSecondary(for: colorScheme))
+                .padding(.horizontal, 24)
+            
+            HStack(spacing: 12) {
+                ForEach(InstagramImageCanvas.allCases) { canvas in
+                    Button {
+                        selectedCanvas.wrappedValue = canvas
+                    } label: {
+                        Text(canvas.displayName)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(selectedCanvas.wrappedValue == canvas ? .kadroCharcoal : .kadroSecondary(for: colorScheme))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(selectedCanvas.wrappedValue == canvas ? Color.kadroLime : Color.kadroCard(for: colorScheme))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(selectedCanvas.wrappedValue == canvas ? Color.clear : Color.kadroBorderColor(for: colorScheme), lineWidth: 0.5)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 24)
         }
     }
     
@@ -873,6 +887,7 @@ struct CreateFlowView: View {
         selectedContentLanguage = defaultContentLanguage
         selectedInstagramFormat = nil
         selectedPostCanvas = .portrait
+        selectedCarouselCanvas = .portrait
         selectedCarouselSlideCount = 7
         inputText = ""
         selectedTone = nil

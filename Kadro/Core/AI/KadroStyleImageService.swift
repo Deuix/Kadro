@@ -255,6 +255,19 @@ final class KadroStyleImageService {
             return preferred
         }
         
+        if let formatDetail = project.formatDetail?.trimmingCharacters(in: .whitespacesAndNewlines), !formatDetail.isEmpty {
+            switch formatDetail {
+            case "instagram_post_square", "instagram_carousel_square":
+                return "1:1"
+            case "instagram_post_portrait", "instagram_carousel", "instagram_carousel_portrait":
+                return "4:5"
+            case "instagram_story":
+                return "9:16"
+            default:
+                break
+            }
+        }
+        
         switch project.type {
         case .reels, .stories:
             return "9:16"
